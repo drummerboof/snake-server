@@ -1,0 +1,18 @@
+{
+    "name": "snake",
+    "description": "Multiplayer snake game with AI support",
+    "version": "0.0.1",
+    "private": true,
+    "dependencies": {
+        "backbone": "0.9.x",
+        "lodash": "1.x"
+    },
+    "devDependencies": {
+        "mocha": "*",
+        "should": "*",
+        "sinon": "*"
+    },
+    "scripts": {
+        "test": "mocha"
+    }
+}
