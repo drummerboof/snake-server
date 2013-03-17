@@ -122,6 +122,13 @@ describe('Game', function () {
             game.isRunning().should.be.true;
             game.tick.callCount.should.eql(1);
         });
+
+        it('should trigger a start event', function () {
+            var startSpy = sinon.spy();
+            game.on('start', startSpy);
+            game.start();
+            startSpy.callCount.should.eql(1);
+        });
     });
 
     describe('#pause()', function () {
@@ -130,6 +137,19 @@ describe('Game', function () {
             game.start();
             game.pause();
             game.isRunning().should.be.false;
+        });
+
+        it('should trigger a pause event', function () {
+            var pauseSpy = sinon.spy(),
+                player1 = new Player('test');
+            player1.setPosition(new Point(1, 0));
+            player1.setDirection('west');
+            game.addPlayer(player1);
+
+            game.on('pause', pauseSpy);
+            game.start();
+            game.pause();
+            pauseSpy.callCount.should.eql(1);
         });
     });
 
@@ -241,27 +261,184 @@ describe('Game', function () {
         });
 
         it('should feed players who collide with food and remove food from the game', function () {
+            var game = new Game({
+                    foodMax: 1,
+                    width: 5,
+                    height: 5
+                }),
+                player1 = new Player('test1', 4);
 
+            sinon.stub(game, 'getRandomSpawnLocation').returns(new Point(3, 0));
+            player1.setPosition(new Point(1, 0));
+            player1.setDirection('east');
+            game.addPlayer(player1);
+
+            // Flush the player queue
+            game.tick();
+
+            // Move the game along one tick
+            game.tick();
+            game.getPlayers().length.should.eql(1);
+            game.getFood().length.should.eql(1);
+
+            // Move the game along another tick so the player collides with food
+            game.tick();
+            game.getPlayers().length.should.eql(1);
+            game.getPlayers()[0].getLength().should.eql(5);
+            game.getFood().should.be.empty;
         });
 
         it('should add any queued players to the game, assigning them a random position if they dont already have one', function () {
+            var player1 = new Player('test1'),
+                player2 = new Player('test2');
 
+            game.addPlayer(player1);
+            game.addPlayer(player2);
+            game.getPlayers().should.be.empty;
+            game.getPlayerQueue().length.should.eql(2)
+
+            // Flush the player queue
+            game.tick();
+            game.getPlayers().length.should.eql(2);
+            game.getPlayerQueue().should.be.empty;
         });
 
         it('should update the game matrix', function () {
+            var game = new Game({
+                    foodMax: 1,
+                    width: 5,
+                    height: 5
+                }),
+                provider = [
+                    {
+                        fixture: {
+                            player1direction: 'east',
+                            player2direction: 'north'
+                        },
+                        expected: [
+                            [null, null, null, null, null],
+                            ['player:p1', null, null, null, null],
+                            [null, null, null, null, null],
+                            [null, null, 'food', null, null],
+                            [null, null, null, null, 'player:p2']
+                        ]
+                    },
+                    {
+                        fixture: {
+                            player1direction: 'east',
+                            player2direction: 'north'
+                        },
+                        expected: [
+                            [null, null, null, null, null],
+                            ['player:p1', null, null, null, null],
+                            ['player:p1', null, null, null, null],
+                            [null, null, 'food', null, null],
+                            [null, null, null, 'player:p2', 'player:p2']
+                        ]
+                    },
+                    {
+                        fixture: {
+                            player1direction: 'east',
+                            player2direction: 'north'
+                        },
+                        expected: [
+                            [null, null, null, null, null],
+                            ['player:p1', null, null, null, null],
+                            ['player:p1', null, null, null, null],
+                            ['player:p1', null, 'food', null, null],
+                            [null, null, 'player:p2', 'player:p2', 'player:p2']
+                        ]
+                    },
+                    {
+                        fixture: {
+                            player1direction: 'north',
+                            player2direction: 'west'
+                        },
+                        expected: [
+                            [null, null, null, null, null],
+                            [null, null, null, null, null],
+                            [null, null, null, null, null],
+                            [null, null, 'player:p2', null, null],
+                            [null, null, 'player:p2', 'player:p2', 'player:p2']
+                        ]
+                    },
+                    {
+                        fixture: {
+                            player1direction: 'north',
+                            player2direction: 'west'
+                        },
+                        expected: [
+                            [null, null, null, null, null],
+                            [null, null, null, null, null],
+                            [null, null, 'player:p2', null, null],
+                            [null, null, 'player:p2', null, null],
+                            [null, null, 'player:p2', 'player:p2', 'player:p2']
+                        ]
+                    }
+                ],
+                player1 = new Player('p1'),
+                player2 = new Player('p2');
 
+            sinon.stub(game, 'getRandomSpawnLocation').returns(new Point(3, 2));
+            player1.setPosition(new Point(1, 0));
+            player2.setPosition(new Point(4, 4));
+            game.addPlayer(player1);
+            game.addPlayer(player2);
+
+            _.each(provider, function (data) {
+                player1.setDirection(data.fixture.player1direction);
+                player2.setDirection(data.fixture.player2direction);
+                game.tick();
+                game.serialize().matrix.should.eql(data.expected);
+            }, this);
         })
 
         it('should trigger a tick event', function () {
-
+            var tickSpy = sinon.spy();
+            game.on('tick', tickSpy);
+            game.tick();
+            tickSpy.callCount.should.eql(1);
         });
 
         it('should pause the game and trigger a gameover event if there are no more players', function () {
+            var player1 = new Player('test1'),
+                gameOverSpy = sinon.spy(),
+                pauseSpy = sinon.spy(game, 'pause');
 
+            game.on('gameover', gameOverSpy);
+            player1.setPosition(new Point(1, 0));
+            player1.setDirection('west');
+            game.addPlayer(player1);
+
+            // Flush player queue
+            game.tick();
+            gameOverSpy.called.should.be.false;
+            pauseSpy.called.should.be.false;
+            // One tick moves player to edge of board
+            game.tick();
+            gameOverSpy.called.should.be.false;
+            pauseSpy.called.should.be.false;
+            // Second tick moves player out of bounds
+            game.tick();
+            gameOverSpy.callCount.should.eql(1);
+            pauseSpy.callCount.should.eql(1);
         });
 
         it('should schedule the next tick event using setTimeout if the game is still running', function () {
+            var clock = sinon.useFakeTimers(),
+                player1 = new Player('test1');
 
+            player1.setPosition(new Point(1, 0));
+            player1.setDirection('west');
+            game.addPlayer(player1);
+            // Call tick and set game to running
+            game.start();
+
+            sinon.spy(game, 'tick');
+            clock.tick(game.getSpeed());
+            game.tick.callCount.should.eql(1);
+
+            clock.restore();
         });
     });
 
