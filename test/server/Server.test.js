@@ -16,12 +16,11 @@ describe('Game Server', function () {
 
         server      = require('http').createServer();
         io          = require('socket.io').listen(server, { log: false });
-        gameServer  = new GameServer(io);
+        gameServer  = new GameServer(io, '/games');
         gameId      = gameServer.createGame({
             width: 10,
             height: 10
         });
-        gameServer.listen();
         server.listen(3000);
     });
 
@@ -32,47 +31,35 @@ describe('Game Server', function () {
     describe('#player:join', function () {
 
         it('should emit a player:join:success event when a player successfully joins a game', function (done) {
-            var client = ioClient.connect('http://localhost:3000', options);
+            var client = ioClient.connect('http://localhost:3000/games/' + gameId, options);
             client.on('connect', function () {
                 client.on('player:join:success', function () {
                     client.disconnect();
                     done();
                 });
-                client.emit('player:join', { game: gameId, name: 'boof' });
-            });
-        });
-
-        it('should emit a player:join:error event with the correct message when a player tries to join a nonexistent game', function (done) {
-            var client = ioClient.connect('http://localhost:3000', options);
-            client.on('connect', function () {
-                client.on('player:join:error', function (data) {
-                    client.disconnect();
-                    data.message.should.eql('Game not found');
-                    done();
-                });
-                client.emit('player:join', { game: 'bad', name: 'boof' });
+                client.emit('player:join', { name: 'boof' });
             });
         });
 
         it('should emit a player:join:error event with the correct message when a player does not specify a name', function (done) {
-            var client = ioClient.connect('http://localhost:3000', options);
+            var client = ioClient.connect('http://localhost:3000/games/' + gameId, options);
             client.on('connect', function () {
                 client.on('player:join:error', function (data) {
                     client.disconnect();
                     data.message.should.eql('Player name must be defined');
                     done();
                 });
-                client.emit('player:join', { game: gameId });
+                client.emit('player:join', undefined);
             });
         });
 
         it('should emit a player:join:error event with the correct message when a player uses a taken name', function (done) {
-            var client1 = ioClient.connect('http://localhost:3000', options),
+            var client1 = ioClient.connect('http://localhost:3000/games/' + gameId, options),
                 client2;
 
             client1.on('connect', function () {
                 client1.on('player:join:success', function () {
-                    client2 = ioClient.connect('http://localhost:3000', options)
+                    client2 = ioClient.connect('http://localhost:3000/games/' + gameId, options);
                     client2.on('connect', function () {
                         client2.on('player:join:error', function (data) {
                             client1.disconnect();
@@ -80,10 +67,10 @@ describe('Game Server', function () {
                             data.message.should.eql('Player name is already in use');
                             done();
                         });
-                        client2.emit('player:join', { game: gameId, name: 'boof' });
+                        client2.emit('player:join', { name: 'boof' });
                     });
                 });
-                client1.emit('player:join', { game: gameId, name: 'boof' });
+                client1.emit('player:join', { name: 'boof' });
             });
         });
     });
@@ -91,9 +78,9 @@ describe('Game Server', function () {
     describe('#game:start', function () {
 
         it('should start sending tick messages to connected clients', function (done) {
-            var alice = ioClient.connect('http://localhost:3000', options),
-                bob = ioClient.connect('http://localhost:3000', options),
-                other = ioClient.connect('http://localhost:3000', options),
+            var alice = ioClient.connect('http://localhost:3000/games/' + gameId, options),
+                bob = ioClient.connect('http://localhost:3000/games/' + gameId, options),
+                other = ioClient.connect('http://localhost:3000/games/other', options),
                 players = {
                     alice: {
                         client: alice,
@@ -111,7 +98,7 @@ describe('Game Server', function () {
 
             _.each(players, function (player, name) {
                 player.client.on('connect', function () {
-                    player.client.emit('player:join', { game: gameId, name: name });
+                    player.client.emit('player:join', { name: name });
                 });
                 player.client.on('player:join:success', function () {
                     players[name].connected = true;

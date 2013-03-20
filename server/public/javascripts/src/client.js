@@ -3,17 +3,9 @@ window.Snake.Views = {};
 window.Snake.Models = {};
 
 $(document).ready(function () {
-
-    var socket = io.connect('http://localhost:3000'),
-        game = new Snake.Models.GameModel({
-            socket: socket
-        }),
-        view = new Snake.Views.GameView({
-            model: game
-        });
-
-    game.join('boof' + new Date().getMilliseconds());
-    view.render();
-
-    window.game = game;
+    console.info(window.location.pathname);
+    var socket = io.connect(window.location.pathname);
+    socket.on('connect:success', function (data) {
+        console.log('connected', data);
+    });
 });

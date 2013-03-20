@@ -35,6 +35,25 @@ describe('Player', function () {
         });
     });
 
+    describe('#kill()', function () {
+
+        it('should set the players alive flag to false', function () {
+            player.isAlive().should.be.true;
+            player.kill();
+            player.isAlive().should.be.false;
+        });
+    });
+
+    describe('#revive()', function () {
+
+        it('should set the players alive flag to true', function () {
+            player.kill();
+            player.isAlive().should.be.false;
+            player.revive();
+            player.isAlive().should.be.true;
+        });
+    });
+
     describe('#setDirection()', function () {
 
         it('should throw an exception if given an invalid value', function () {

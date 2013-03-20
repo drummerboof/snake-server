@@ -16,8 +16,7 @@ module.exports = {
     getGame: function(req, res){
         res.render('game', {
             title: 'Game',
-            id: 'test',
-            game: dependencies.gameServer.games['test'].serialize()
+            id: req.route.params.id
         });
     },
 

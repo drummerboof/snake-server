@@ -37,8 +37,7 @@ io = socketIo.listen(server, { log: false });
 server.listen(app.get('port'), function(){
   console.log("Express server listening on port " + app.get('port'));
 });
-gameServer = new GameServer(io);
-gameServer.listen();
+gameServer = new GameServer(io, '/games');
 gameServer.createGame({
     width: 50,
     height: 50,
