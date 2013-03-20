@@ -11,23 +11,10 @@ describe('Food', function () {
             (function () { new Food(0, 0); }).should.not.throw();
         });
 
-        it('should set the value if provided', function () {
-            var food = new Food(0, 0, 2);
+        it('should set the value and points if provided', function () {
+            var food = new Food(0, 0, 2, 4);
             food.getValue().should.eql(2);
-        });
-    });
-
-    describe('#setValue()', function () {
-
-        it('should throw an exception if not given a numeric value', function () {
-            var food = new Food(0, 0);
-            (function () { food.setValue('blah'); }).should.throw('Value must be numeric');
-        });
-
-        it('should set the value for the Food', function () {
-            var food = new Food(0, 0);
-            food.setValue(5);
-            food.getValue().should.eql(5);
+            food.getPoints().should.eql(4);
         });
     });
 

@@ -4,6 +4,7 @@ describe('Player', function () {
         sinon = require('sinon'),
         Player = require('../../../lib/game/Player'),
         Point = require('../../../lib/game/Point'),
+        Food = require('../../../lib/game/Food'),
         player;
 
     beforeEach(function () {
@@ -157,11 +158,11 @@ describe('Player', function () {
 
     describe('#eat()', function () {
 
-        it('should increment the length by the given amount or 1 if no amount given', function () {
-            player.eat();
-            player.getLength().should.eql(6);
-            player.eat(3);
-            player.getLength().should.eql(9);
+        it('should increment the length and update the score of the player', function () {
+            player.getLength().should.eql(5);
+            player.eat(new Food(0, 0, 3, 5));
+            player.getLength().should.eql(8);
+            player.getScore().should.eql(5);
         });
     });
 
