@@ -42,7 +42,7 @@ gameServer.listen();
 gameServer.createGame({
     width: 50,
     height: 50,
-    speed: 300
+    speed: 80
 }, 'test');
 
 routes.inject({
