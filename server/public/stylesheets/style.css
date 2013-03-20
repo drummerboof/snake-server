@@ -1,0 +1,32 @@
+body {
+    margin: 0;
+    padding: 10px;
+    font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+    color: #00B7FF;
+}
+
+#canvas {
+    position: relative;
+    border: 1px solid #A9A9A9;
+}
+#canvas > div {
+    position: absolute;
+    border-right: 1px solid #D9D9D9;
+    border-bottom: 1px solid #D9D9D9;
+    box-sizing: border-box;
+}
+#canvas > div.player {
+    background: #999999;
+}
+
+#canvas > div.current {
+    background: #333333;
+}
+
+#canvas > div.food {
+    background: #660000;
+}
+

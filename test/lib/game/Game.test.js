@@ -35,6 +35,16 @@ describe('Game', function () {
             game.tick();
             game.getFood().length.should.eql(2);
         });
+
+        it('should maintain its own scope', function () {
+            var game2 = new Game({
+                width: 10,
+                height:20
+            });
+            game2.addPlayer(new Player('boof'));
+            game2.tick();
+            game.getPlayers().should.be.empty;
+        });
     });
 
     describe('#serialize()', function () {
@@ -100,15 +110,24 @@ describe('Game', function () {
         });
     });
 
+    describe('#getPlayer()', function () {
+
+        it('should get the player from the list of active players by name', function () {
+            var player = new Player('test');
+            game._state.players.push(player);
+            game.getPlayer('test').should.eql(player);
+        });
+    });
+
     describe('#removePlayer()', function () {
 
-        it('should remove the player from the list of active players', function () {
+        it('should remove the player from the list of active players by name', function () {
             var player = new Player('test');
             game._state.players.push(player);
             game.getPlayers().length.should.eql(1);
-            game.removePlayer(new Player('bob'));
+            game.removePlayer('bob');
             game.getPlayers().length.should.eql(1);
-            game.removePlayer(player);
+            game.removePlayer('test');
             game.getPlayers().length.should.eql(0);
         });
     });
@@ -129,27 +148,41 @@ describe('Game', function () {
             game.start();
             startSpy.callCount.should.eql(1);
         });
+
+        it('should do nothing if the game is already running', function () {
+            sinon.stub(game, 'tick');
+            game.start();
+            var startSpy = sinon.spy();
+            game.tick.reset();
+            game.start();
+            game.tick.called.should.be.false;
+            startSpy.callCount.should.eql(0);
+        });
     });
 
     describe('#pause()', function () {
 
         it('should update the status of the game', function () {
+            sinon.stub(game, 'tick');
             game.start();
             game.pause();
             game.isRunning().should.be.false;
         });
 
         it('should trigger a pause event', function () {
-            var pauseSpy = sinon.spy(),
-                player1 = new Player('test');
-            player1.setPosition(new Point(1, 0));
-            player1.setDirection('west');
-            game.addPlayer(player1);
-
+            var pauseSpy = sinon.spy();
+            sinon.stub(game, 'tick');
             game.on('pause', pauseSpy);
             game.start();
             game.pause();
             pauseSpy.callCount.should.eql(1);
+        });
+
+        it('should do nothing if the game is already running', function () {
+            var pauseSpy = sinon.spy();
+            game.on('pause', pauseSpy);
+            game.pause();
+            pauseSpy.callCount.should.eql(0);
         });
     });
 

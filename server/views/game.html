@@ -1,0 +1,24 @@
+{% extends 'layout.html' %}
+{% block title %}{% parent %} - Game: {{ id }} {% endblock %}
+
+{% block content %}
+
+<h2>Game: {{ id }}</h2>
+
+
+<div id="game" data-game="{{ id }}" data-width="{{ game.width }}" data-height="{{ game.height }}">
+    <div id="controls">
+        <button id="buttonGameToggle">Play</button>
+    </div>
+    <div id="canvas">
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/javascripts/src/client.js"></script>
+<script src="/javascripts/src/views/GameView.js"></script>
+<script src="/javascripts/src/models/GameModel.js"></script>
+{% endblock %}
