@@ -41,7 +41,7 @@ describe('Game', function () {
                 width: 10,
                 height:20
             });
-            game2.addPlayer(new Player('boof'));
+            game2.queuePlayer(new Player('boof'));
             game2.tick();
             game.getPlayers().should.be.empty;
         });
@@ -49,11 +49,28 @@ describe('Game', function () {
 
     describe('#serialize()', function () {
 
-        it('should combine the settings with the state of the game', function () {
-            var game = new Game({ width: 3, height: 3 });
+        it('should combine the settings with the state of the game and add players in the player queue', function () {
+            var game = new Game({ width: 3, height: 3 }),
+                player = new Player('bob');
+            player.setPosition(new Point(0, 0));
+            game.queuePlayer(player);
             game.serialize().should.eql({
                 status: 'paused',
-                players: [],
+                players: [{
+                    name: 'bob',
+                    direction: null,
+                    length: 5,
+                    position: {
+                        x: 0,
+                        y: 0
+                    },
+                    alive: true,
+                    score: 0,
+                    body: [{
+                        x: 0,
+                        y: 0
+                    }]
+                }],
                 obstacles: [],
                 food: [],
                 matrix: [
@@ -66,6 +83,21 @@ describe('Game', function () {
                 width: 3,
                 height: 3
             });
+        });
+    });
+
+    describe('#getLivingPlayers()', function () {
+
+        it('should return an array of all players which are alive', function () {
+            var player1 = new Player('alive!'),
+                player2 = new Player('dead!');
+            game.queuePlayer(player1);
+            game.queuePlayer(player2);
+            game.flushPlayerQueue();
+
+            player2.kill()
+            game.getLivingPlayers().length.should.eql(1);
+            game.getLivingPlayers()[0].should.eql(player1);
         });
     });
 
@@ -95,16 +127,16 @@ describe('Game', function () {
         });
     });
 
-    describe('#addPlayer()', function () {
+    describe('#queuePlayer()', function () {
 
         it('should throw an error if adding a player whose name is already taken', function () {
-            game.addPlayer(new Player('bob'));
-            (function () { game.addPlayer(new Player('bob')); }).should.throw('Player name is already in use');
+            game.queuePlayer(new Player('bob'));
+            (function () { game.queuePlayer(new Player('bob')); }).should.throw('Player name is already in use');
         });
         it('should add a new player to the player queue', function () {
             var player = new Player('test');
             game.getPlayerQueue().should.be.empty;
-            game.addPlayer(player);
+            game.queuePlayer(player);
             game.getPlayerQueue().length.should.eql(1);
             game.getPlayerQueue()[0].should.eql(player);
         });
@@ -214,25 +246,54 @@ describe('Game', function () {
             game.getFood()[1].getPosition().should.eql(foodPoints[1]);
         });
 
-        it('should move each player', function () {
+        it('should move each player if they are still alive', function () {
             var player1 = new Player('test1'),
-                player2 = new Player('test2');
+                player2 = new Player('test2'),
+                player3 = new Player('test3');
 
-            game.addPlayer(player1);
-            game.addPlayer(player2);
+            game.queuePlayer(player1);
+            game.queuePlayer(player2);
+            game.queuePlayer(player3);
 
-            // Flush player queue
+            // Flush player queue and kill player 3
             game.tick();
+            player3.kill();
 
             sinon.stub(player1, 'move');
             sinon.stub(player2, 'move');
+            sinon.stub(player3, 'move');
 
             game.tick();
             player1.move.callCount.should.eql(1);
             player2.move.callCount.should.eql(1);
+            player3.move.called.should.be.false;
         });
 
-        it('should remove players who are out of bounds', function () {
+        it('should kill players who collide with themselves', function () {
+            var player1 = new Player('test1');
+
+            player1.setPosition(new Point(2, 2));
+            player1.setDirection('west');
+            game.queuePlayer(player1);
+
+            // Flush player queue and move one space
+            game.tick();
+            game.tick();
+
+            player1.setDirection('south');
+            game.tick();
+
+            player1.setDirection('east');
+            game.tick();
+
+            player1.isAlive().should.be.true;
+
+            player1.setDirection('north');
+            game.tick();
+            player1.isAlive().should.be.false;
+        });
+
+        it('should kill players who are out of bounds', function () {
             var player1 = new Player('test1'),
                 player2 = new Player('test2');
 
@@ -240,19 +301,22 @@ describe('Game', function () {
             player1.setDirection('west');
             player2.setPosition(new Point(1, 4));
             player2.setDirection('north');
-            game.addPlayer(player1);
-            game.addPlayer(player2);
+            game.queuePlayer(player1);
+            game.queuePlayer(player2);
 
             // Flush player queue
             game.tick();
             game.getPlayers().length.should.eql(2);
+            player1.isAlive().should.be.true;
+            player2.isAlive().should.be.true;
 
             game.tick();
-            game.getPlayers().length.should.eql(1);
-            game.getPlayers()[0].should.eql(player2);
+            game.getPlayers().length.should.eql(2);
+            player1.isAlive().should.be.false;
+            player2.isAlive().should.be.true;
         });
 
-        it('should remove the colliding player when two players collide in a head to body collision', function () {
+        it('should kill the colliding player when two players collide in a head to body collision', function () {
             var player1 = new Player('test1'),
                 player2 = new Player('test2');
 
@@ -260,8 +324,8 @@ describe('Game', function () {
             player1.setDirection('east');
             player2.setPosition(new Point(0, 2));
             player2.setDirection('north');
-            game.addPlayer(player1);
-            game.addPlayer(player2);
+            game.queuePlayer(player1);
+            game.queuePlayer(player2);
             // Flush the player queue
             game.tick();
             game.getPlayers().length.should.eql(2);
@@ -269,9 +333,11 @@ describe('Game', function () {
             // Move twice so player2 head collides with player1 body
             game.tick();
             game.getPlayers().length.should.eql(2);
+
             game.tick();
-            game.getPlayers().length.should.eql(1);
-            game.getPlayers()[0].should.eql(player1);
+            game.getPlayers().length.should.eql(2);
+            player1.isAlive().should.be.true;
+            player2.isAlive().should.be.false;
         });
 
         it('should remove the both players when two players collide in a head to head collision', function () {
@@ -282,51 +348,59 @@ describe('Game', function () {
             player1.setDirection('west');
             player2.setPosition(new Point(0, 1));
             player2.setDirection('north');
-            game.addPlayer(player1);
-            game.addPlayer(player2);
+            game.queuePlayer(player1);
+            game.queuePlayer(player2);
             // Flush the player queue
             game.tick();
             game.getPlayers().length.should.eql(2);
 
             // Move once so player2 and player1 have a head to head collision
             game.tick();
-            game.getPlayers().should.be.empty;
+            game.getPlayers().length.should.eql(2);
+            player1.isAlive().should.be.false;
+            player2.isAlive().should.be.false;
         });
 
-        it('should feed players who collide with food and remove food from the game', function () {
+        it('should feed living players who collide with food and remove food from the game', function () {
             var game = new Game({
-                    foodMax: 1,
+                    foodMax: 2,
                     width: 5,
                     height: 5
                 }),
-                player1 = new Player('test1', 4);
+                foodPlaced = 0,
+                player1 = new Player('test1', 4),
+                player2 = new Player('test2', 4);
 
-            sinon.stub(game, 'getRandomSpawnLocation').returns(new Point(3, 0));
+            sinon.stub(game, 'getRandomSpawnLocation', function () {
+                return new Point(3, foodPlaced++);
+            });
+            sinon.stub(player2, 'isAlive').returns(false);
             player1.setPosition(new Point(1, 0));
             player1.setDirection('east');
-            game.addPlayer(player1);
+            player2.setPosition(new Point(1, 1));
+            player2.setDirection('east');
+            game.queuePlayer(player1);
 
             // Flush the player queue
             game.tick();
 
             // Move the game along one tick
             game.tick();
-            game.getPlayers().length.should.eql(1);
-            game.getFood().length.should.eql(1);
+            game.getFood().length.should.eql(2);
 
-            // Move the game along another tick so the player collides with food
+            // Move the game along another tick so the players collides with food
             game.tick();
-            game.getPlayers().length.should.eql(1);
-            game.getPlayers()[0].getLength().should.eql(5);
-            game.getFood().should.be.empty;
+            player1.getLength().should.eql(5);
+            player2.getLength().should.eql(4);
+            game.getFood().length.should.eql(1);
         });
 
         it('should add any queued players to the game, assigning them a random position if they dont already have one', function () {
             var player1 = new Player('test1'),
                 player2 = new Player('test2');
 
-            game.addPlayer(player1);
-            game.addPlayer(player2);
+            game.queuePlayer(player1);
+            game.queuePlayer(player2);
             game.getPlayers().should.be.empty;
             game.getPlayerQueue().length.should.eql(2)
 
@@ -336,7 +410,7 @@ describe('Game', function () {
             game.getPlayerQueue().should.be.empty;
         });
 
-        it('should update the game matrix', function () {
+        it('should update the game matrix with renderable display objects', function () {
             var game = new Game({
                     foodMax: 1,
                     width: 5,
@@ -410,13 +484,18 @@ describe('Game', function () {
                     }
                 ],
                 player1 = new Player('p1'),
-                player2 = new Player('p2');
+                player2 = new Player('p2'),
+                player3 = new Player('p3');
 
             sinon.stub(game, 'getRandomSpawnLocation').returns(new Point(3, 2));
+            sinon.stub(player3, 'isAlive').returns(false);
+            sinon.stub(player3, 'shouldRender').returns(false);
             player1.setPosition(new Point(1, 0));
             player2.setPosition(new Point(4, 4));
-            game.addPlayer(player1);
-            game.addPlayer(player2);
+            player3.setPosition(new Point(2, 2));
+            game.queuePlayer(player1);
+            game.queuePlayer(player2);
+            game.queuePlayer(player3);
 
             _.each(provider, function (data) {
                 player1.setDirection(data.fixture.player1direction);
@@ -441,7 +520,7 @@ describe('Game', function () {
             game.on('gameover', gameOverSpy);
             player1.setPosition(new Point(1, 0));
             player1.setDirection('west');
-            game.addPlayer(player1);
+            game.queuePlayer(player1);
 
             // Flush player queue
             game.tick();
@@ -452,6 +531,7 @@ describe('Game', function () {
             gameOverSpy.called.should.be.false;
             pauseSpy.called.should.be.false;
             // Second tick moves player out of bounds
+            game.removePlayer('test1');
             game.tick();
             gameOverSpy.callCount.should.eql(1);
             pauseSpy.callCount.should.eql(1);
@@ -463,7 +543,7 @@ describe('Game', function () {
 
             player1.setPosition(new Point(1, 0));
             player1.setDirection('west');
-            game.addPlayer(player1);
+            game.queuePlayer(player1);
             // Call tick and set game to running
             game.start();
 

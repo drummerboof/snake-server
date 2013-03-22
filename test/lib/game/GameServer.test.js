@@ -3,7 +3,7 @@ describe('Game Server', function () {
     var _ = require('lodash'),
         ioClient = require('socket.io-client'),
         sinon = require('sinon'),
-        GameServer = require('../../lib/game/GameServer'),
+        GameServer = require('../../../lib/game/GameServer'),
         options = {
             transports: ['websocket'],
             'force new connection': true

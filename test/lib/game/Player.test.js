@@ -29,6 +29,29 @@ describe('Player', function () {
         });
     });
 
+    describe('#serialize()', function () {
+
+        it('should return the correct value', function () {
+            player.setDirection('east');
+            player.setPosition(new Point(0, 0));
+            player.serialize().should.eql({
+                name: 'test',
+                direction: 'east',
+                length: 5,
+                position: {
+                    x: 0,
+                    y: 0
+                },
+                alive: true,
+                score: 0,
+                body: [{
+                    x: 0,
+                    y: 0
+                }]
+            });
+        });
+    });
+
     describe('#getId()', function () {
 
         it('should return the correct identifier for the player', function () {
@@ -52,6 +75,17 @@ describe('Player', function () {
             player.isAlive().should.be.false;
             player.revive();
             player.isAlive().should.be.true;
+        });
+    });
+
+    describe('#shouldRender()', function () {
+
+        it('should return the value of isAlive()', function () {
+            var isAlive = sinon.stub(player, 'isAlive');
+            isAlive.returns(true);
+            player.shouldRender().should.eql(true);
+            isAlive.returns(false);
+            player.shouldRender().should.eql(false);
         });
     });
 
@@ -168,8 +202,10 @@ describe('Player', function () {
 
     describe('#move()', function () {
 
-        it('should throw an exception if called when the player has no direction', function () {
-            (function () { player.move(); }).should.throw('Cannot move without a direction');
+        it('should throw an exception if called when the player has no direction or position', function () {
+            (function () { player.move(); }).should.throw('Cannot move without a direction and position');
+            player.setDirection('east');
+            (function () { player.move(); }).should.throw('Cannot move without a direction and position');
         });
 
         it('should move the player to the correct position, increasing the length if required', function () {

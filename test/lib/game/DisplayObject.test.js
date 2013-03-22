@@ -39,7 +39,20 @@ describe('DisplayObject', function () {
         });
     });
 
+    describe('#shouldRender()', function () {
+
+        it('should return true', function () {
+            var displayObject = new DisplayObject();
+            displayObject.shouldRender().should.be.true;
+        });
+    });
+
     describe('#setPosition()', function () {
+
+        it('should throw an error if called with no arguments', function () {
+            var displayObject = new DisplayObject();
+            (function () { displayObject.setPosition(); }).should.throw('Must specify a position');
+        });
 
         it('should set the position of the display object using a point value', function () {
             var displayObject = new DisplayObject();
@@ -62,6 +75,26 @@ describe('DisplayObject', function () {
             displayObject.getCollisionPoints().should.eql([
                 new Point(5, 6)
             ]);
+        });
+    });
+
+    describe('selfCollides()', function () {
+
+        it('should return the point at which any the display points are overlapping, or false', function () {
+            var displayObject = new DisplayObject(),
+                getCollisionPointsStub = sinon.stub(displayObject, 'getCollisionPoints'),
+                provider = [{
+                    fixture: [new Point(1, 1)],
+                    expected: false
+                }, {
+                    fixture: [new Point(1, 2), new Point(1, 0), new Point(1, 2)],
+                    expected: new Point(1, 2)
+                }];
+
+            _.each(provider, function (data) {
+                getCollisionPointsStub.returns(data.fixture);
+                displayObject.selfCollides().should.eql(data.expected);
+            }, this);
         });
     });
 
