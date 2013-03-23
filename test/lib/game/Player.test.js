@@ -29,6 +29,30 @@ describe('Player', function () {
         });
     });
 
+    describe('#reset()', function () {
+
+        it('should reset the player state to default', function () {
+            player.setDirection('north');
+            player.setPosition(new Point(5, 0));
+            player.eat(new Food(5, 5));
+            player.move();
+            player.kill();
+            player.reset();
+            player.serialize().should.eql({
+                name: 'test',
+                direction: null,
+                length: 5,
+                alive: true,
+                position: null,
+                score: 0,
+                body: [{
+                    x: 0,
+                    y: 0
+                }]
+            });
+        });
+    });
+
     describe('#serialize()', function () {
 
         it('should return the correct value', function () {

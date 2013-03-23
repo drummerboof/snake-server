@@ -42,7 +42,7 @@ describe('Game', function () {
                 height:20
             });
             game2.queuePlayer(new Player('boof'));
-            game2.tick();
+            game2.flushPlayerQueue();
             game.getPlayers().should.be.empty;
         });
     });
@@ -153,14 +153,73 @@ describe('Game', function () {
 
     describe('#removePlayer()', function () {
 
-        it('should remove the player from the list of active players by name', function () {
-            var player = new Player('test');
-            game._state.players.push(player);
+        it('should remove the player from the list of active players or player queue by name', function () {
+            var player = new Player('test'),
+                queuedPlayer = new Player('queued');
+            game.queuePlayer(player);
+            game.flushPlayerQueue();
             game.getPlayers().length.should.eql(1);
+
+            game.queuePlayer(queuedPlayer);
+
             game.removePlayer('bob');
             game.getPlayers().length.should.eql(1);
+            game.getPlayerQueue().length.should.eql(1);
+
             game.removePlayer('test');
             game.getPlayers().length.should.eql(0);
+            game.getPlayerQueue().length.should.eql(1);
+
+            game.removePlayer('queued');
+            game.getPlayers().length.should.eql(0);
+            game.getPlayerQueue().length.should.eql(0);
+        });
+    });
+
+    describe('#flushPlayerQueue()', function () {
+
+        it('should add any queued players to the game, assigning them a random position if they dont already have one', function () {
+            var player1 = new Player('test1'),
+                player2 = new Player('test2');
+
+            game.queuePlayer(player1);
+            game.queuePlayer(player2);
+            game.getPlayers().should.be.empty;
+            game.getPlayerQueue().length.should.eql(2)
+
+            // Flush the player queue
+            game.flushPlayerQueue();
+            game.getPlayers().length.should.eql(2);
+            game.getPlayerQueue().should.be.empty;
+        });
+    });
+
+    describe('#spawnFood()', function () {
+
+        it('should spawn any food if required', function () {
+            var game = new Game({
+                    foodMax: 2
+                }),
+                foodPlaced = 0,
+                foodPoints = [
+                    new Point(1, 1),
+                    new Point(2, 2)
+                ];
+
+            sinon.stub(game, 'getRandomSpawnLocation', function () {
+                return foodPoints[foodPlaced++];
+            });
+
+            game.spawnFood();
+            game.getFood()[0].getPosition().should.eql(foodPoints[0]);
+            game.getFood()[1].getPosition().should.eql(foodPoints[1]);
+            game.getRandomSpawnLocation.callCount.should.eql(2);
+
+            // Same food still remains and was not replaced
+            game.spawnFood();
+            game.getFood()[0].getPosition().should.eql(foodPoints[0]);
+            game.getFood()[1].getPosition().should.eql(foodPoints[1]);
+            game.getRandomSpawnLocation.callCount.should.eql(2);
         });
     });
 
@@ -218,6 +277,60 @@ describe('Game', function () {
         });
     });
 
+    describe('#reset()', function () {
+
+        it('should set the status back to paused', function () {
+            var clock = sinon.useFakeTimers(),
+                player = new Player('test');
+
+            player.setPosition(new Point(0, 0));
+            player.setDirection('north');
+            game.queuePlayer(player);
+            game.start();
+            game.isRunning().should.be.true;
+            game.tick();
+            game.isRunning().should.be.false;
+            game.serialize().status.should.eql('over');
+            game.reset();
+            game.serialize().status.should.eql('paused');
+            clock.restore();
+        });
+
+        it('should move dead players back into the player queue and reset their properties', function () {
+            var player1 = new Player('test1'),
+                player2 = new Player('test2');
+            player1.kill();
+            game.queuePlayer(player1);
+            game.flushPlayerQueue();
+            game.queuePlayer(player2);
+            game.getPlayers().length.should.eql(1);
+            game.getPlayerQueue().length.should.eql(1);
+
+            sinon.stub(game, 'isRunning').returns(false);
+            sinon.stub(player1, 'reset');
+            game.reset();
+            game.getPlayers().should.be.empty;
+            game.getPlayerQueue().length.should.eql(2);
+            player1.reset.called.should.be.true;
+        });
+
+        it('should remove all food from the game', function () {
+            game.spawnFood();
+            game.getFood().length.should.eql(1);
+            game.reset();
+            game.getFood().should.be.empty;
+        });
+
+        it('should recreate an empty matrix', function () {
+            sinon.stub(game, 'getRandomSpawnLocation').returns(new Point(1, 2));
+            game.spawnFood();
+            game.tick();
+            game.serialize().matrix[1][2].should.eql('food');
+            game.reset();
+            (game.serialize().matrix[1][2] === null).should.be.true;
+        });
+    });
+
     describe('#tick()', function () {
 
         function createTestGame() {
@@ -229,21 +342,10 @@ describe('Game', function () {
         }
 
         it('should spawn any food if required', function () {
-            var game = createTestGame(),
-                foodPlaced = 0,
-                foodPoints = [
-                    new Point(1, 1),
-                    new Point(2, 2)
-                ];
-
-            sinon.stub(game, 'getRandomSpawnLocation', function () {
-                return foodPoints[foodPlaced++];
-            });
-
+            var game = createTestGame();
+            sinon.spy(game, 'spawnFood');
             game.tick();
-
-            game.getFood()[0].getPosition().should.eql(foodPoints[0]);
-            game.getFood()[1].getPosition().should.eql(foodPoints[1]);
+            game.spawnFood.called.should.be.true;
         });
 
         it('should move each player if they are still alive', function () {
@@ -395,19 +497,10 @@ describe('Game', function () {
             game.getFood().length.should.eql(1);
         });
 
-        it('should add any queued players to the game, assigning them a random position if they dont already have one', function () {
-            var player1 = new Player('test1'),
-                player2 = new Player('test2');
-
-            game.queuePlayer(player1);
-            game.queuePlayer(player2);
-            game.getPlayers().should.be.empty;
-            game.getPlayerQueue().length.should.eql(2)
-
-            // Flush the player queue
+        it('should flush the player queue', function () {
+            sinon.spy(game, 'flushPlayerQueue');
             game.tick();
-            game.getPlayers().length.should.eql(2);
-            game.getPlayerQueue().should.be.empty;
+            game.flushPlayerQueue.called.should.be.true;
         });
 
         it('should update the game matrix with renderable display objects', function () {
@@ -512,29 +605,36 @@ describe('Game', function () {
             tickSpy.callCount.should.eql(1);
         });
 
-        it('should pause the game and trigger a gameover event if there are no more players', function () {
-            var player1 = new Player('test1'),
-                gameOverSpy = sinon.spy(),
-                pauseSpy = sinon.spy(game, 'pause');
+        it('should set the game status to over and trigger a gameover event if all the players are dead', function () {
+            var clock = sinon.useFakeTimers(),
+                player1 = new Player('test1'),
+                gameOverSpy = sinon.spy();
 
             game.on('gameover', gameOverSpy);
+            game.on('gameover', function (game) {
+                if (game.isRunning()) {
+                    throw new Error('Game should not be running');
+                }
+            });
             player1.setPosition(new Point(1, 0));
             player1.setDirection('west');
             game.queuePlayer(player1);
 
             // Flush player queue
-            game.tick();
+            game.start();
             gameOverSpy.called.should.be.false;
-            pauseSpy.called.should.be.false;
+            game.isRunning().should.be.true;
             // One tick moves player to edge of board
             game.tick();
             gameOverSpy.called.should.be.false;
-            pauseSpy.called.should.be.false;
+            game.isRunning().should.be.true;
             // Second tick moves player out of bounds
-            game.removePlayer('test1');
             game.tick();
             gameOverSpy.callCount.should.eql(1);
-            pauseSpy.callCount.should.eql(1);
+            game.isRunning().should.be.false;
+            game.serialize().status.should.eql('over');
+
+            clock.restore();
         });
 
         it('should schedule the next tick event using setTimeout if the game is still running', function () {

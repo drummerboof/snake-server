@@ -3,9 +3,17 @@ describe('GameObject', function () {
     var sinon = require('sinon'),
         GameObject = require('../../../lib/game/GameObject'),
         GameObjectSubClass1,
+        GameObjectSubClass3,
         GameObjectSubClass2;
 
     beforeEach(function () {
+        GameObjectSubClass1 = GameObject.extend({
+            _state: {
+                prop3: 'value3',
+                child: null,
+                children: []
+            }
+        });
         GameObjectSubClass2 = GameObject.extend({
             _state: {
                 prop1: 'value1'
@@ -15,11 +23,15 @@ describe('GameObject', function () {
                 return state;
             }
         }),
-        GameObjectSubClass1 = GameObject.extend({
+        GameObjectSubClass3 = GameObject.extend({
+            _defaultProperties: ['prop1', 'prop3'],
             _state: {
-                prop3: 'value3',
-                child: null,
-                children: []
+                prop1: 'value3',
+                prop2: true,
+                prop3: null
+            },
+            initialize: function() {
+                this._state.prop3 = 'jam';
             }
         });
     });
@@ -37,6 +49,38 @@ describe('GameObject', function () {
             sinon.spy(GameObjectSubClass1.prototype.initialize, 'apply');
             var object = new GameObjectSubClass1(true, false);
             GameObjectSubClass1.prototype.initialize.apply.calledWithExactly(object, true, false);
+        });
+    });
+
+    describe('#reset()', function () {
+
+        it('should return the state to the defaults if any properties are listed in _defaultProperties', function () {
+            var withDefaults = new GameObjectSubClass3(),
+                withoutDefaults = new GameObjectSubClass1();
+
+            withDefaults._state.prop1 = 'different';
+            withDefaults._state.prop2 = 'something else';
+            withDefaults._state.prop3 = 'not original';
+
+            withDefaults.reset();
+
+            withDefaults.serialize().should.eql({
+                prop1: 'value3',
+                prop2: 'something else',
+                prop3: 'jam'
+            });
+
+            withoutDefaults._state.prop3 = 'different';
+            withoutDefaults._state.child = 'something else';
+            withoutDefaults._state.children = ['not original'];
+
+            withoutDefaults.reset();
+
+            withoutDefaults.serialize().should.eql({
+                prop3: 'different',
+                child: 'something else',
+                children: ['not original']
+            });
         });
     });
 
