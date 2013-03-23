@@ -39,9 +39,9 @@ server.listen(app.get('port'), function(){
 });
 gameServer = new GameServer(io, '/games');
 gameServer.createGame({
-    width: 50,
-    height: 50,
-    speed: 80
+    width: 25,
+    height: 25,
+    speed: 100
 }, 'test');
 
 routes.inject({

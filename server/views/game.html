@@ -5,20 +5,66 @@
 
 <h2>Game: {{ id }}</h2>
 
+<div id="app">
+    <div id="game" class="clearfix">
+        <div id="scores" class="panel">
 
-<div id="game">
-    <div id="controls">
-        <button id="buttonGameToggle">Play</button>
-    </div>
-    <div id="canvas">
+        </div>
+        <div id="canvas">
 
+        </div>
+        <div id="footer" class="panel clearfix">
+            <div id="join">
+
+            </div>
+            <div id="controls">
+
+            </div>
+        </div>
     </div>
+    <ul id="players" class="list-view">
+
+    </ul>
 </div>
-
 {% endblock %}
 
 {% block scripts %}
-<script src="/javascripts/src/client.js"></script>
-<script src="/javascripts/src/views/GameView.js"></script>
-<script src="/javascripts/src/models/GameModel.js"></script>
+<script src="/javascripts/src/init.js"></script>
+
+<script src="/javascripts/src/app/models/Client.js"></script>
+<script src="/javascripts/src/app/models/Game.js"></script>
+<script src="/javascripts/src/app/models/Player.js"></script>
+<script src="/javascripts/src/app/models/KeyListener.js"></script>
+<script src="/javascripts/src/app/collections/Players.js"></script>
+
+<script src="/javascripts/src/app/views/Canvas.js"></script>
+<script src="/javascripts/src/app/views/Controls.js"></script>
+<script src="/javascripts/src/app/views/Scores.js"></script>
+<script src="/javascripts/src/app/views/Players.js"></script>
+<script src="/javascripts/src/app/views/Join.js"></script>
+
+<script src="/javascripts/src/app/App.js"></script>
+
+<script id="template-player" type="text/x-template">
+    <li class="list-item player <% print(alive ? 'active' : 'disabled') %>">
+        <h3 class="list-item-title"><%- name %></h3>
+        <p class="list-item-info">Score: <%= score %></p>
+    </li>
+</script>
+
+<script id="template-scores" type="text/x-template">
+    <div id="player-score" class="key-value">
+        <span class="key">Score:</span>
+        <span class="value"><%= score %></span>
+    </div>
+</script>
+
+<script id="template-controls" type="text/x-template">
+    <button id="controls-play-pause"><%= text %></button>
+</script>
+
+<script id="template-join" type="text/x-template">
+    <input name="name" type="text" id="join-player-name" value="<%- name %>" />
+    <button id="join-player-button">Join</button>
+</script>
 {% endblock %}
