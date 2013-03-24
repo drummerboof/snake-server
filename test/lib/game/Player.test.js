@@ -16,6 +16,7 @@ describe('Player', function () {
         it('should throw an exception if given a valid name in the constructor', function () {
             (function () { new Player(); }).should.throw('Player name must be defined');
             (function () { new Player(4); }).should.throw('Player name must be defined');
+            (function () { new Player(''); }).should.throw('Player name must be defined');
         });
 
         it('should set the length of the player if provided in the constructor', function () {

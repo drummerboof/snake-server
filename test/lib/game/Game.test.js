@@ -127,6 +127,36 @@ describe('Game', function () {
         });
     });
 
+    describe('#respawnPlayer()', function () {
+
+        it('should throw an exception if the player is alive or not present', function () {
+            var player = new Player('test');
+            player.setPosition(new Point(0, 0));
+            player.setDirection('east');
+            game.queuePlayer(player);
+            game.flushPlayerQueue();
+            (function () { game.respawnPlayer(player.getName()); }).should.throw('Player must exist and be dead to be respawned');
+        });
+
+        it('should revive a player and set a new random location and position', function () {
+            var player = new Player('test'),
+                newPosition = new Point(2, 2);
+            player.setPosition(new Point(0, 0));
+            player.setDirection('east');
+            game.queuePlayer(player);
+            game.flushPlayerQueue();
+            sinon.stub(game, 'getRandomSpawnLocation').returns(newPosition);
+            sinon.spy(player, 'setRandomDirection');
+            sinon.spy(player, 'reset');
+            player.kill();
+            game.respawnPlayer(player.getName());
+            player.getPosition().should.eql(newPosition);
+            player.setRandomDirection.callCount.should.eql(1);
+            player.reset.callCount.should.eql(1);
+        });
+
+    });
+
     describe('#queuePlayer()', function () {
 
         it('should throw an error if adding a player whose name is already taken', function () {
