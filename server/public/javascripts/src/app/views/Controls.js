@@ -1,30 +1,56 @@
-Snake.Views.Controls = Backbone.View.extend({
+Snake.Views.Controls = (function () {
 
-    el: '#controls',
+    var Controls = Backbone.View.extend({
 
-    events: {
-        'click #controls-play-pause': '_onPlayPauseClick'
-    },
+        el: '#controls',
 
-    _buttonText: {
-        paused: 'play',
-        over: 'reset',
-        playing: 'pause'
-    },
+        fields: null,
 
-    initialize: function (options) {
-        this.template = _.template($('#template-controls').html());
-        this.model.on('change:status', this.render, this);
-    },
+        events: {
+            'click #controls-play-pause': '_onPlayPauseClick',
+            'click #controls-join-button': '_onJoinClick'
+        },
 
-    render: function () {
-        this.$el.html(this.template({
-            text: this._buttonText[this.model.get('status')]
-        }));
-    },
+        _buttonText: {
+            paused: 'play',
+            over: 'reset',
+            playing: 'pause'
+        },
 
-    _onPlayPauseClick: function () {
-        console.log('click');
-        this.model.trigger(this._buttonText[this.model.get('status')], this);
-    }
-});
+        initialize: function (options) {
+            this.player = options.player;
+            this.game = options.model;
+            this.template = _.template($('#template-controls').html());
+            this.game.on('player:join:success', this.render, this);
+            this.game.on('change:status', this.render, this);
+        },
+
+        render: function () {
+            var player = this.game.players.get(this.player.get('name'));
+            this.$el.html(this.template({
+                name: this.player.get('name'),
+                button: this._buttonText[this.model.get('status')]
+            }));
+            this.$el.removeClass('playing waiting').addClass(player ? 'playing' : 'waiting');
+            return this;
+        },
+
+        _onPlayPauseClick: function () {
+            this.model[this._buttonText[this.model.get('status')]]();
+        },
+
+        _onJoinClick: function () {
+            var playerField = this.$('#controls-player-name');
+            if (playerField) {
+                if (playerField.val() === '') {
+                    Snake.App.trigger('error:flash', 'Please enter a player name');
+                } else {
+                    this.player.set({ name: playerField.val() });
+                    this.player.trigger('join', this.player);
+                }
+            }
+        }
+    });
+
+    return Controls;
+}());

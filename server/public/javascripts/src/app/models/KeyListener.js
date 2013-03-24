@@ -1,28 +1,34 @@
-Snake.Models.KeyListener = Backbone.Model.extend({
+Snake.Models.KeyListener = (function () {
 
-    _keyMap: {},
+    var KeyListener = Backbone.Model.extend({
 
-    initialize: function (map) {
-        this._keyMap = map || {};
-    },
+        _keyMap: {},
 
-    getListeners: function() {
-        return this._keyMap;
-    },
+        initialize: function (map) {
+            this._keyMap = map || {};
+        },
 
-    listen: function () {
-        $(document).on('keydown', _.bind(this._onKeyPress, this));
-    },
+        getListeners: function() {
+            return this._keyMap;
+        },
 
-    stop: function () {
-        $(document).off('keydown', _.bind(this._onKeyPress, this));
-    },
+        listen: function () {
+            $(document).on('keydown', _.bind(this._onKeyPress, this));
+        },
 
-    _onKeyPress: function (event) {
-        if (_.has(this._keyMap, event.keyCode)) {
-            event.preventDefault();
-            this.trigger('press:' + this._keyMap[event.keyCode], this, event);
+        stop: function () {
+            $(document).off('keydown', _.bind(this._onKeyPress, this));
+        },
+
+        _onKeyPress: function (event) {
+            if (_.has(this._keyMap, event.keyCode)) {
+                event.preventDefault();
+                this.trigger('press', this._keyMap[event.keyCode], event, this);
+                this.trigger('press:' + this._keyMap[event.keyCode], event, this);
+            }
         }
-    }
 
-});
+    });
+
+    return KeyListener;
+}());

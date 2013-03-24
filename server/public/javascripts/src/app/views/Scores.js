@@ -1,14 +1,19 @@
-Snake.Views.Scores = Backbone.View.extend({
+Snake.Views.Scores = (function () {
 
-    el: '#scores',
+    var Scores = Backbone.View.extend({
 
-    initialize: function (options) {
-        this.template = _.template($('#template-scores').html());
-        this.model.on('change:score', this.render, this);
-    },
+        el: '#scores',
 
-    render: function () {
-        this.$el.html(this.template(this.model.toJSON()));
-        return this;
-    }
-});
+        initialize: function (options) {
+            this.template = _.template($('#template-scores').html());
+            this.model.on('change:score', this.render, this);
+        },
+
+        render: function () {
+            this.$el.html(this.template(this.model.toJSON()));
+            return this;
+        }
+    });
+
+    return Scores;
+}());

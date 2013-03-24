@@ -1,21 +1,26 @@
-Snake.Views.Players = Backbone.View.extend({
+Snake.Views.Players = (function () {
 
-    el: '#players',
+    var Players = Backbone.View.extend({
 
-    events: {
+        el: '#players',
 
-    },
+        events: {
 
-    initialize: function (options) {
-        this.template = _.template($('#template-player').html());
-        this.model.on('reset', this.render, this);
-    },
+        },
 
-    render: function () {
-        this.$el.empty();
-        this.model.each(function (player) {
-            this.$el.append(this.template(player.toJSON()));
-        }, this);
-        return this;
-    }
-});
+        initialize: function (options) {
+            this.template = _.template($('#template-player').html());
+            this.model.on('reset', this.render, this);
+        },
+
+        render: function () {
+            this.$el.empty();
+            this.model.each(function (player) {
+                this.$el.append(this.template(player.toJSON()));
+            }, this);
+            return this;
+        }
+    });
+
+    return Players;
+}());

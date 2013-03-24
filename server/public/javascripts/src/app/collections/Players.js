@@ -1,8 +1,11 @@
-Snake.Collections.Players = Backbone.Collection.extend({
+Snake.Collections.Players = (function () {
 
-    model: Snake.Models.Player,
+    var Players = Backbone.Collection.extend({
 
-    comparator: function (player) {
-        return -player.get('score');
-    }
-});
+        comparator: function (player) {
+            return -player.get('score');
+        }
+    });
+
+    return Players;
+}());

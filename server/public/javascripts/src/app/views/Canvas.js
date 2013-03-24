@@ -1,61 +1,66 @@
-Snake.Views.Canvas = Backbone.View.extend({
+Snake.Views.Canvas = (function () {
 
-    el: '#canvas',
+    var Canvas = Backbone.View.extend({
 
-    cellSize: 20,
+        el: '#canvas',
 
-    cells: null,
+        cellSize: 10,
 
-    initialize: function (options) {
-        this.cells = [];
-        this.model.on('change:matrix', function () {
-            this.render(false)
-        }, this);
-    },
+        canvasSize: 500,
 
-    render: function (force) {
-        if (this.$el.children().length === 0 || force) {
-            console.log('drawing');
-            this.$el.width(this.model.get('width') * this.cellSize);
-            this.$el.height(this.model.get('height') * this.cellSize);
+        cells: null,
 
-            var fragment = $(document.createDocumentFragment());
-            for (var x = 0; x < this.model.get('width'); x++) {
-                this.cells[x] = [];
-                for (var y = 0; y < this.model.get('height'); y++) {
-                    this.cells[x][y] = this._createCell(x, y);
-                    fragment.append(this.cells[x][y]);
-                }
-            }
-            this.$el.empty().append(fragment);
-        }
-        this.update();
-        return this;
-    },
+        initialize: function (options) {
+            this.cells = [];
+            this.model.on('change:matrix', function () {
+                this.render(false)
+            }, this);
+        },
 
-    _createCell: function (x, y) {
-        return $('<div/>').css({
-            width: this.cellSize + 'px',
-            height: this.cellSize + 'px',
-            top: y * this.cellSize + 'px',
-            left: x * this.cellSize + 'px'
-        });
-    },
-
-    update: function () {
-        var matrix = this.model.get('matrix');
-        _.each(matrix, function (column, x) {
-            _.each(column, function (cell, y) {
-                this.cells[x][y].attr('class', '');
-                if (cell !== null) {
-                    var components = cell.split(':');
-                    this.cells[x][y].addClass(components[0]);
-                    if (components[0] === 'player' && components[1] === this.model.player.get('name')) {
-                        this.cells[x][y].addClass('current');
+        render: function (force) {
+            if (this.$el.children().length === 0 || force) {
+                this.cellSize = this.canvasSize / this.model.get('width');
+                console.log(this.cellSize);
+                var fragment = $(document.createDocumentFragment());
+                for (var x = 0; x < this.model.get('width'); x++) {
+                    this.cells[x] = [];
+                    for (var y = 0; y < this.model.get('height'); y++) {
+                        this.cells[x][y] = this._createCell(x, y);
+                        fragment.append(this.cells[x][y]);
                     }
                 }
-            }, this);
-        }, this);
+                this.$el.empty().append(fragment);
+            }
+            this.update();
+            return this;
+        },
 
-    }
-});
+        _createCell: function (x, y) {
+            return $('<div/>').css({
+                width: this.cellSize + 'px',
+                height: this.cellSize + 'px',
+                top: y * this.cellSize + 'px',
+                left: x * this.cellSize + 'px'
+            });
+        },
+
+        update: function () {
+            var matrix = this.model.get('matrix');
+            _.each(matrix, function (column, x) {
+                _.each(column, function (cell, y) {
+                    this.cells[x][y].attr('class', '');
+                    if (cell !== null) {
+                        var components = cell.split(':');
+                        this.cells[x][y].addClass(components[0]);
+                        if (components[0] === 'player' && components[1] === this.model.player.get('name')) {
+                            this.cells[x][y].addClass('current');
+                        }
+                    }
+                }, this);
+            }, this);
+
+        }
+    });
+
+    return Canvas;
+}());
