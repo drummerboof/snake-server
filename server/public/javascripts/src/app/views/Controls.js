@@ -23,6 +23,7 @@ Snake.Views.Controls = (function () {
             this.template = _.template($('#template-controls').html());
             this.game.on('player:join:success', this.render, this);
             this.game.on('change:status', this.render, this);
+            this.player.on('change:name', this.render, this);
         },
 
         render: function () {

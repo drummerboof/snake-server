@@ -48,6 +48,7 @@ Snake.Models.GameClient = (function () {
                 });
             }, this);
             this.on('change:raw', this._onRawChange, this);
+            this.on('player:join:error', this._onPlayerJoinError, this);
             this._initializeSocket();
         },
 
@@ -91,6 +92,10 @@ Snake.Models.GameClient = (function () {
             this.set(_.pick(data, this._copyToTopLevel));
         },
 
+        _onPlayerJoinError: function (data) {
+            this.player.unset('name');
+        },
+
         _initializeSocket: function () {
             _.each(this._socketEvents, function (event) {
                 this.socket.on(event, _.bind(function (data) {
@@ -99,6 +104,9 @@ Snake.Models.GameClient = (function () {
                     }
                     if (data.game) {
                         this.set({ raw: data.game });
+                    }
+                    if (event.indexOf(':error') > 0 && data.message) {
+                        Snake.App.trigger('error:flash', data.message, 2000);
                     }
                     this.trigger(event, data, this);
                 }, this));
