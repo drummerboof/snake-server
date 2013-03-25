@@ -42,6 +42,7 @@ describe('Player', function () {
             player.serialize().should.eql({
                 name: 'test',
                 direction: null,
+                pendingMove: false,
                 length: 5,
                 alive: true,
                 position: null,
@@ -62,6 +63,7 @@ describe('Player', function () {
             player.serialize().should.eql({
                 name: 'test',
                 direction: 'east',
+                pendingMove: true,
                 length: 5,
                 position: {
                     x: 0,
@@ -77,10 +79,11 @@ describe('Player', function () {
         });
     });
 
-    describe('#getId()', function () {
+    describe('#getCollisionPointId()', function () {
 
         it('should return the correct identifier for the player', function () {
-            player.getId().should.eql('player:test');
+            player.getCollisionPointId(1).should.eql('player#test');
+            player.getCollisionPointId(0).should.eql('player:head#test');
         });
     });
 
@@ -142,10 +145,11 @@ describe('Player', function () {
             }, this);
         });
 
-        it('should set the direction when given a valid value', function () {
+        it('should set the direction when given a valid value and set the pendingMove flag to true', function () {
             _.each(['north', 'east', 'south', 'west'], function (direction) {
                 player.setDirection(direction);
                 player.getDirection().should.eql(direction);
+                player.isPendingMove().should.be.true;
             });
         });
     });

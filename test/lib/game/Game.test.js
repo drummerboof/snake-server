@@ -10,6 +10,7 @@ describe('Game', function () {
 
     beforeEach(function () {
         game = new Game({
+            speed: 1000,
             width: 10,
             height: 10
         });
@@ -59,6 +60,7 @@ describe('Game', function () {
                 players: [{
                     name: 'bob',
                     direction: null,
+                    pendingMove: false,
                     length: 5,
                     position: {
                         x: 0,
@@ -80,6 +82,7 @@ describe('Game', function () {
                 ],
                 speed: 50,
                 foodMax: 1,
+                playerDirectionQueueLimit: 2,
                 width: 3,
                 height: 3
             });
@@ -141,17 +144,18 @@ describe('Game', function () {
         it('should revive a player and set a new random location and position', function () {
             var player = new Player('test'),
                 newPosition = new Point(2, 2);
+            sinon.stub(game.getMatrix(), 'getPointQuadrant').returns('southeast');
             player.setPosition(new Point(0, 0));
             player.setDirection('east');
             game.queuePlayer(player);
             game.flushPlayerQueue();
             sinon.stub(game, 'getRandomSpawnLocation').returns(newPosition);
-            sinon.spy(player, 'setRandomDirection');
+            sinon.spy(player, 'setDirection');
             sinon.spy(player, 'reset');
             player.kill();
             game.respawnPlayer(player.getName());
             player.getPosition().should.eql(newPosition);
-            player.setRandomDirection.callCount.should.eql(1);
+            player.setDirection.calledWithExactly('west').should.be.true;
             player.reset.callCount.should.eql(1);
         });
 
@@ -206,11 +210,47 @@ describe('Game', function () {
         });
     });
 
+    describe('#queuePlayerDirection()', function () {
+
+        it('should throw an exception if the player cannot be found', function () {
+            (function () { game.queuePlayerDirection('test', 'east'); }).should.throw('Player cannot be found');
+        });
+
+        it('should queue up player directions up to the limit', function () {
+            var player = new Player('test');
+
+            player.setDirection('east');
+            player.setPosition(new Point(2, 2));
+
+            game.queuePlayer(player);
+            game.flushPlayerQueue();
+            game.queuePlayerDirection('test', 'south');
+            game.queuePlayerDirection('test', 'west');
+            game.queuePlayerDirection('test', 'south');
+            game.queuePlayerDirection('test', 'east');
+            player.getDirection().should.eql('east');
+
+            game.tick();
+            player.getDirection().should.eql('south');
+
+            game.tick();
+            player.getDirection().should.eql('west');
+
+            game.tick();
+            player.getDirection().should.eql('west');
+        });
+    });
+
     describe('#flushPlayerQueue()', function () {
 
         it('should add any queued players to the game, assigning them a random position if they dont already have one', function () {
             var player1 = new Player('test1'),
                 player2 = new Player('test2');
+
+            player1.setPosition(new Point(0, 0));
+
+            sinon.spy(player1, 'setPosition');
+            sinon.spy(player2, 'setPosition');
 
             game.queuePlayer(player1);
             game.queuePlayer(player2);
@@ -221,6 +261,40 @@ describe('Game', function () {
             game.flushPlayerQueue();
             game.getPlayers().length.should.eql(2);
             game.getPlayerQueue().should.be.empty;
+
+            player1.setPosition.callCount.should.eql(0);
+            player2.setPosition.callCount.should.eql(1);
+        });
+
+        it('it should set their direction based on which quadrant of the game they spawned in', function () {
+            var matrixQuadrantStub = sinon.stub(game.getMatrix(), 'getPointQuadrant'),
+                provider = [{
+                    quadrant: 'northeast',
+                    expected: 'south'
+                }, {
+                    quadrant: 'northwest',
+                    expected: 'east'
+                }, {
+                    quadrant: 'southeast',
+                    expected: 'west'
+                }, {
+                    quadrant: 'southwest',
+                    expected: 'north'
+                }];
+
+            _.each(provider, function (data) {
+                var player = new Player(data.quadrant);
+                player.setPosition(new Point(0, 0));
+
+                sinon.stub(player, 'setDirection');
+                matrixQuadrantStub.returns(data.quadrant);
+
+                game.queuePlayer(player);
+                game.flushPlayerQueue();
+
+                player.setDirection.calledWithExactly(data.expected).should.be.true;
+                player.setDirection.restore();
+            }, this);
         });
     });
 
@@ -365,6 +439,7 @@ describe('Game', function () {
 
         function createTestGame() {
             return new Game({
+                speed: 1000,
                 foodMax: 2,
                 width: 5,
                 height: 5
@@ -547,10 +622,10 @@ describe('Game', function () {
                         },
                         expected: [
                             [null, null, null, null, null],
-                            ['player:p1', null, null, null, null],
+                            ['player:head#p1', null, null, null, null],
                             [null, null, null, null, null],
                             [null, null, 'food', null, null],
-                            [null, null, null, null, 'player:p2']
+                            [null, null, null, null, 'player:head#p2']
                         ]
                     },
                     {
@@ -560,10 +635,10 @@ describe('Game', function () {
                         },
                         expected: [
                             [null, null, null, null, null],
-                            ['player:p1', null, null, null, null],
-                            ['player:p1', null, null, null, null],
+                            ['player#p1', null, null, null, null],
+                            ['player:head#p1', null, null, null, null],
                             [null, null, 'food', null, null],
-                            [null, null, null, 'player:p2', 'player:p2']
+                            [null, null, null, 'player:head#p2', 'player#p2']
                         ]
                     },
                     {
@@ -573,10 +648,10 @@ describe('Game', function () {
                         },
                         expected: [
                             [null, null, null, null, null],
-                            ['player:p1', null, null, null, null],
-                            ['player:p1', null, null, null, null],
-                            ['player:p1', null, 'food', null, null],
-                            [null, null, 'player:p2', 'player:p2', 'player:p2']
+                            ['player#p1', null, null, null, null],
+                            ['player#p1', null, null, null, null],
+                            ['player:head#p1', null, 'food', null, null],
+                            [null, null, 'player:head#p2', 'player#p2', 'player#p2']
                         ]
                     },
                     {
@@ -588,8 +663,8 @@ describe('Game', function () {
                             [null, null, null, null, null],
                             [null, null, null, null, null],
                             [null, null, null, null, null],
-                            [null, null, 'player:p2', null, null],
-                            [null, null, 'player:p2', 'player:p2', 'player:p2']
+                            [null, null, 'player:head#p2', null, null],
+                            [null, null, 'player#p2', 'player#p2', 'player#p2']
                         ]
                     },
                     {
@@ -600,9 +675,9 @@ describe('Game', function () {
                         expected: [
                             [null, null, null, null, null],
                             [null, null, null, null, null],
-                            [null, null, 'player:p2', null, null],
-                            [null, null, 'player:p2', null, null],
-                            [null, null, 'player:p2', 'player:p2', 'player:p2']
+                            [null, null, 'player:head#p2', null, null],
+                            [null, null, 'player#p2', null, null],
+                            [null, null, 'player#p2', 'player#p2', 'player#p2']
                         ]
                     }
                 ],
@@ -641,11 +716,6 @@ describe('Game', function () {
                 gameOverSpy = sinon.spy();
 
             game.on('gameover', gameOverSpy);
-            game.on('gameover', function (game) {
-                if (game.isRunning()) {
-                    throw new Error('Game should not be running');
-                }
-            });
             player1.setPosition(new Point(1, 0));
             player1.setDirection('west');
             game.queuePlayer(player1);

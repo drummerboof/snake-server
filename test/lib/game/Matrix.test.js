@@ -130,6 +130,37 @@ describe('Matrix', function () {
         });
     });
 
+    describe('#getPointQuadrant()', function () {
+
+        it('should throw an exception if given a point which is out of bounds', function () {
+
+        });
+
+        it('should return the quadrant number in which the given point lies', function () {
+            var matrix = new Matrix(5, 5),
+                provider = [{
+                    point: new Point(1, 1),
+                    expected: 'northwest'
+                }, {
+                    point: new Point(1, 3),
+                    expected: 'southwest'
+                }, {
+                    point: new Point(3, 1),
+                    expected: 'northeast'
+                }, {
+                    point: new Point(3, 3),
+                    expected: 'southeast'
+                }, {
+                    point: new Point(2, 2),
+                    expected: 'southeast'
+                }];
+
+            _.each(provider, function (data) {
+                matrix.getPointQuadrant(data.point).should.eql(data.expected);
+            }, this);
+        });
+    });
+
     describe('#serialize()', function () {
 
         it('should return the raw matrix data', function () {
