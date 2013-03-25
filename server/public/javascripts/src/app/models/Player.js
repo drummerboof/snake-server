@@ -10,15 +10,8 @@ Snake.Models.Player = (function () {
         directions: ['north', 'south', 'east', 'west'],
 
         initialize: function (options) {
-            this.game = options.game;
             this.keyListener = options.keyListener;
-            this.game.on('change:status', this._onGameStateChange, this);
             this._initializeKeyListener();
-        },
-
-        respawn: function () {
-            this.unset('direction', { silent: true });
-            this.game.respawn();
         },
 
         _initializeKeyListener: function () {
@@ -28,9 +21,7 @@ Snake.Models.Player = (function () {
         },
 
         _onKeyPress: function (alias) {
-            if (this.game.isRunning()) {
-                this.set({ direction: alias });
-            }
+            this.set({ direction: alias });
         }
     });
 

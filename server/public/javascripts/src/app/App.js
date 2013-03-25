@@ -39,17 +39,16 @@ Snake.App = (function () {
         },
 
         _initializeModels: function (options) {
-            this.models.game = new Snake.Models.GameClient({
-                socket: options.io.connect(window.location.pathname)
-            });
             this.models.player = new Snake.Models.Player({
-                game: this.models.game,
                 keyListener: this.keyListener
+            });
+            this.models.game = new Snake.Models.GameClient({
+                socket: options.io.connect(window.location.pathname),
+                player: this.models.player
             });
             this.models.game.on('connect:success', this.render, this);
             this.models.game.on('connect:error', this.error, this);
             this.models.player.on('change:alive', this._onPlayerDeadOrAlive, this);
-            this.models.player.on('join', this._onPlayerJoin, this);
         },
 
         _initializeViews: function (options) {
@@ -87,16 +86,12 @@ Snake.App = (function () {
             }, this);
         },
 
-        _onPlayerJoin: function (player) {
-            this.models.game.join(player);
-        },
-
         _onPlayerDeadOrAlive: function (model, alive) {
             if (!alive) {
                 var message = 'You died! Respawning in ' + (this.models.game.respawnTime / 1000) + ' seconds...';
                 Snake.App.trigger('message:flash', message, this.models.game.respawnTime);
                 setTimeout(_.bind(function () {
-                    this.models.player.respawn();
+                    this.models.game.respawn();
                 }, this), this.models.game.respawnTime);
             }
         }

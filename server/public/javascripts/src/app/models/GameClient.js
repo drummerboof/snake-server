@@ -35,28 +35,25 @@ Snake.Models.GameClient = (function () {
 
         initialize: function (options) {
             this.socket = options.socket;
+            this.player = options.player;
             this.players = new Snake.Collections.Players();
-            this.on('change:raw', this._onRawChange, this);
-            this.on('change:status', this._onStatusChange, this);
-            this._initializeSocket();
-        },
-
-        join: function (player) {
-            this._emit('player:join', {
-                name: player.get('name')
-            });
-            player.off('change:direction').on('change:direction', function (model) {
-                if (model.get('alive')) {
+            this.player.on('change:direction', function (model) {
+                if (this.isRunning() && model.get('alive')) {
                     this._emit('player:command', { direction: model.get('direction') });
                 }
             }, this);
-            this.player = player;
+            this.player.on('join', function () {
+                this._emit('player:join', {
+                    name: this.player.get('name')
+                });
+            }, this);
+            this.on('change:raw', this._onRawChange, this);
+            this._initializeSocket();
         },
 
         respawn: function () {
-            if (this.player) {
-                this._emit('player:respawn');
-            }
+            this.player.unset('direction', { silent: true });
+            this._emit('player:respawn');
         },
 
         play: function () {
@@ -92,14 +89,6 @@ Snake.Models.GameClient = (function () {
                 }
             }
             this.set(_.pick(data, this._copyToTopLevel));
-        },
-
-        _onStatusChange: function (model, status) {
-            if (status === 'paused') {
-                Snake.App.trigger('message:show', 'Game paused');
-            } else {
-                Snake.App.trigger('messages:clear');
-            }
         },
 
         _initializeSocket: function () {

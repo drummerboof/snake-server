@@ -29,6 +29,7 @@ Snake.Views.Controls = (function () {
             var player = this.game.players.get(this.player.get('name'));
             this.$el.html(this.template({
                 name: this.player.get('name'),
+                status: this.model.get('status'),
                 button: this._buttonText[this.model.get('status')]
             }));
             this.$el.removeClass('playing waiting').addClass(player ? 'playing' : 'waiting');
