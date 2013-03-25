@@ -6,6 +6,7 @@ Snake.Models.KeyListener = (function () {
 
         initialize: function (map) {
             this._keyMap = map || {};
+            this._scopedKeyPress = _.bind(this._onKeyPress, this);
         },
 
         getListeners: function() {
@@ -13,18 +14,19 @@ Snake.Models.KeyListener = (function () {
         },
 
         listen: function () {
-            $(document).on('keydown', _.bind(this._onKeyPress, this));
+            console.log('listening');
+            $(document).on('keydown', this._scopedKeyPress);
         },
 
         stop: function () {
-            $(document).off('keydown', _.bind(this._onKeyPress, this));
+            $(document).off('keydown', this._scopedKeyPress);
         },
 
         _onKeyPress: function (event) {
             if (_.has(this._keyMap, event.keyCode)) {
                 event.preventDefault();
                 this.trigger('press', this._keyMap[event.keyCode], event, this);
-                this.trigger('press:' + this._keyMap[event.keyCode], event, this);
+                this.trigger('press:' + this._keyMap[event.keyCode], this._keyMap[event.keyCode], event, this);
             }
         }
 

@@ -2,7 +2,7 @@ Snake.Models.GameClient = (function () {
 
     var GameClient = Backbone.Model.extend({
 
-        respawnTime: 5000,
+        respawnTime: 3000,
 
         defaults: {
             raw: null,
@@ -37,6 +37,7 @@ Snake.Models.GameClient = (function () {
             this.socket = options.socket;
             this.players = new Snake.Collections.Players();
             this.on('change:raw', this._onRawChange, this);
+            this.on('change:status', this._onStatusChange, this);
             this._initializeSocket();
         },
 
@@ -44,11 +45,9 @@ Snake.Models.GameClient = (function () {
             this._emit('player:join', {
                 name: player.get('name')
             });
-            player.on('change:direction', function (model) {
+            player.off('change:direction').on('change:direction', function (model) {
                 if (model.get('alive')) {
-                    this._emit('player:command', {
-                        direction: model.get('direction')
-                    });
+                    this._emit('player:command', { direction: model.get('direction') });
                 }
             }, this);
             this.player = player;
@@ -72,6 +71,10 @@ Snake.Models.GameClient = (function () {
             this._emit('game:reset');
         },
 
+        isRunning: function () {
+            return this.get('status') === 'playing';
+        },
+
         _emit: function (message, data) {
             this.socket.emit(message, data);
             console.log('sent', message, data);
@@ -89,6 +92,14 @@ Snake.Models.GameClient = (function () {
                 }
             }
             this.set(_.pick(data, this._copyToTopLevel));
+        },
+
+        _onStatusChange: function (model, status) {
+            if (status === 'paused') {
+                Snake.App.trigger('message:show', 'Game paused');
+            } else {
+                Snake.App.trigger('messages:clear');
+            }
         },
 
         _initializeSocket: function () {

@@ -8,17 +8,23 @@ Snake.App = (function () {
 
         models: {},
 
-        _directionKeys: {
+        _keyMap: {
             37: 'west',
             38: 'north',
             39: 'east',
-            40: 'south'
+            40: 'south',
+            13: 'enter',
+            32: 'space'
         },
 
         initialize: function (options) {
+            this.keyListener = new Snake.Models.KeyListener(this._keyMap);
+            this.keyListener.listen();
+
             this._initializeModels(options);
             this._initializeViews(options);
             this._initializeGlobalEvents();
+
             Snake.App.trigger('message:show', 'Loading game...');
         },
 
@@ -33,13 +39,12 @@ Snake.App = (function () {
         },
 
         _initializeModels: function (options) {
-            this.playerKeyListener = new Snake.Models.KeyListener(this._directionKeys);
             this.models.game = new Snake.Models.GameClient({
                 socket: options.io.connect(window.location.pathname)
             });
-            this.models.player = new Snake.Models.ManualPlayer({
+            this.models.player = new Snake.Models.Player({
                 game: this.models.game,
-                keyListener: this.playerKeyListener
+                keyListener: this.keyListener
             });
             this.models.game.on('connect:success', this.render, this);
             this.models.game.on('connect:error', this.error, this);

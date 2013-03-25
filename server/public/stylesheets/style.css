@@ -100,8 +100,16 @@ a {
     background: #999999;
 }
 
+#canvas > div.player.head {
+    background: #777777;
+}
+
 #canvas > div.current {
-    background: #333333;
+    background: #444444;
+}
+
+#canvas > div.current.head {
+    background: #222222;
 }
 
 #canvas > div.food {
