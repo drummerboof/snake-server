@@ -11,8 +11,9 @@ describe('DisplayObject', function () {
 
     describe('#serialize()', function () {
 
-        it('should include the point in the state information', function () {
+        it('should include the point and identifier in the state information', function () {
             var SubDisplayObject = DisplayObject.extend({
+                    _identifier: 'test',
                     _state: {
                         key: 'value'
                     }
@@ -22,6 +23,7 @@ describe('DisplayObject', function () {
             displayObject.setPosition(4, 5);
             displayObject.serialize().should.eql({
                 key: 'value',
+                id: 'test',
                 position: { x: 4, y: 5 }
             });
         });

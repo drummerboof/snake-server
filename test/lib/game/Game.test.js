@@ -59,6 +59,7 @@ describe('Game', function () {
                 status: 'paused',
                 players: [{
                     name: 'bob',
+                    id: 'player',
                     direction: null,
                     pendingMove: false,
                     length: 5,

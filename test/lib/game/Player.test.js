@@ -41,6 +41,7 @@ describe('Player', function () {
             player.reset();
             player.serialize().should.eql({
                 name: 'test',
+                id: 'player',
                 direction: null,
                 pendingMove: false,
                 length: 5,
@@ -62,6 +63,7 @@ describe('Player', function () {
             player.setPosition(new Point(0, 0));
             player.serialize().should.eql({
                 name: 'test',
+                id: 'player',
                 direction: 'east',
                 pendingMove: true,
                 length: 5,
