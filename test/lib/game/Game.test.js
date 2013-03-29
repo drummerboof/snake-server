@@ -6,10 +6,14 @@ describe('Game', function () {
         Player = require('../../../lib/game/Player'),
         Food = require('../../../lib/game/Food'),
         Point = require('../../../lib/game/Point'),
+        InvinciblePowerUp = require('../../../lib/game/powerup/Invincible'),
+        FoodPointMultiplierPowerUp = require('../../../lib/game/powerup/FoodPointMultiplier'),
         game;
 
     beforeEach(function () {
         game = new Game({
+            powerUpChance: 1,
+            playerSpeed: 1,
             speed: 1000,
             width: 10,
             height: 10
@@ -21,20 +25,6 @@ describe('Game', function () {
         it('should throw an exception if the width or height are less than 1', function () {
             (function () { new Game({ width: 0, height: 10}); }).should.throw('Game width or height cannot be zero');
             (function () { new Game({ width: 10, height: 0}); }).should.throw('Game width or height cannot be zero');
-        });
-
-        it('should set the settings for the game', function () {
-            var game = new Game({
-                speed: 200,
-                foodMax: 2,
-                width: 50,
-                height: 60
-            });
-            game.getSpeed().should.eql(200);
-            game.serialize().width.should.eql(50);
-            game.serialize().height.should.eql(60);
-            game.tick();
-            game.getFood().length.should.eql(2);
         });
 
         it('should maintain its own scope', function () {
@@ -51,7 +41,7 @@ describe('Game', function () {
     describe('#serialize()', function () {
 
         it('should combine the settings with the state of the game and add players in the player queue', function () {
-            var game = new Game({ width: 3, height: 3 }),
+            var game = new Game({ width: 3, height: 3, powerUpChance: 1 }),
                 player = new Player('bob');
             player.setPosition(new Point(0, 0));
             game.queuePlayer(player);
@@ -63,18 +53,21 @@ describe('Game', function () {
                     direction: null,
                     pendingMove: false,
                     length: 5,
+                    speed: 0.5,
                     position: {
                         x: 0,
                         y: 0
                     },
                     alive: true,
                     score: 0,
+                    powerUps: [],
                     body: [{
                         x: 0,
                         y: 0
                     }]
                 }],
                 obstacles: [],
+                powerUps: [],
                 food: [],
                 matrix: [
                     [null, null, null],
@@ -83,7 +76,10 @@ describe('Game', function () {
                 ],
                 speed: 50,
                 foodMax: 1,
+                powerUpMax: 2,
+                powerUpChance: 1,
                 playerDirectionQueueLimit: 2,
+                playerSpeed: 0.5,
                 width: 3,
                 height: 3
             });
@@ -168,12 +164,15 @@ describe('Game', function () {
             game.queuePlayer(new Player('bob'));
             (function () { game.queuePlayer(new Player('bob')); }).should.throw('Player name is already in use');
         });
-        it('should add a new player to the player queue', function () {
+        it('should add a new player to the player queue and set the speed of the player', function () {
             var player = new Player('test');
+            sinon.spy(player, 'setSpeed');
+
             game.getPlayerQueue().should.be.empty;
             game.queuePlayer(player);
             game.getPlayerQueue().length.should.eql(1);
             game.getPlayerQueue()[0].should.eql(player);
+            player.setSpeed.calledWithExactly(game.serialize().playerSpeed).should.be.true;
         });
     });
 
@@ -225,11 +224,16 @@ describe('Game', function () {
 
             game.queuePlayer(player);
             game.flushPlayerQueue();
+
             game.queuePlayerDirection('test', 'south');
             game.queuePlayerDirection('test', 'west');
             game.queuePlayerDirection('test', 'south');
             game.queuePlayerDirection('test', 'east');
+
             player.getDirection().should.eql('east');
+
+            // Initial tick to move player one position in initial direction
+            game.tick();
 
             game.tick();
             player.getDirection().should.eql('south');
@@ -325,6 +329,89 @@ describe('Game', function () {
             game.getFood()[0].getPosition().should.eql(foodPoints[0]);
             game.getFood()[1].getPosition().should.eql(foodPoints[1]);
             game.getRandomSpawnLocation.callCount.should.eql(2);
+        });
+    });
+
+    describe('#spawnPowerUp()', function () {
+
+        it('should spawn a power up based on the powerUpChance and powerUpMax settings', function () {
+            var game = new Game({
+                    powerUpMax: 2,
+                    powerUpChance: 0.5
+                }),
+                powerUps = [
+                    InvinciblePowerUp,
+                    FoodPointMultiplierPowerUp
+                ],
+                powerUpPlaced = 0,
+                powerUpPoints = [
+                    new Point(1, 1),
+                    new Point(2, 2)
+                ],
+                randomNumersReturned = 0,
+                randomNumbers =[
+                    0.2,
+                    0.7,
+                    0.49,
+                    0.1
+                ];
+
+            sinon.stub(game, 'getRandomSpawnLocation', function () {
+                return powerUpPoints[powerUpPlaced++];
+            });
+
+            sinon.stub(game, 'getRandomPowerUpConstructor', function () {
+                return powerUps[powerUpPlaced];
+            });
+
+            sinon.stub(Math, 'random', function () {
+                return randomNumbers[randomNumersReturned++];
+            });
+
+            game.getPowerUps().should.be.empty;
+
+            // Under chance so powerUp spawned
+            game.spawnPowerUp();
+            game.getPowerUps().length.should.eql(1);
+
+            // Over chance so no spawn
+            game.spawnPowerUp();
+            game.getPowerUps().length.should.eql(1);
+
+            // Under chance so spawn
+            game.spawnPowerUp();
+            game.getPowerUps().length.should.eql(2);
+
+            // Max reached so no spawn
+            game.spawnPowerUp();
+            game.getPowerUps().length.should.eql(2);
+
+            game.getPowerUps()[0].should.be.an.instanceof(InvinciblePowerUp);
+            game.getPowerUps()[1].should.be.an.instanceof(FoodPointMultiplierPowerUp);
+
+            Math.random.restore();
+        });
+    });
+
+    describe('#getRandomPowerUpConstructor()', function () {
+
+        it('should return a random powerUp constructor', function () {
+            var called = 0;
+            sinon.stub(_, 'shuffle', function () {
+                var powerUps = [
+                    InvinciblePowerUp,
+                    FoodPointMultiplierPowerUp
+                ];
+                if (called) {
+                    powerUps.reverse();
+                }
+                called++;
+                return powerUps;
+            });
+            game.getRandomPowerUpConstructor().should.eql(InvinciblePowerUp);
+            game.getRandomPowerUpConstructor().should.eql(FoodPointMultiplierPowerUp);
+
+            _.shuffle.restore();
         });
     });
 
@@ -426,6 +513,13 @@ describe('Game', function () {
             game.getFood().should.be.empty;
         });
 
+        it('should remove all powerUps from the game', function () {
+            game.spawnPowerUp();
+            game.getPowerUps().length.should.eql(1);
+            game.reset();
+            game.getPowerUps().should.be.empty;
+        });
+
         it('should recreate an empty matrix', function () {
             sinon.stub(game, 'getRandomSpawnLocation').returns(new Point(1, 2));
             game.spawnFood();
@@ -477,6 +571,21 @@ describe('Game', function () {
             player3.move.called.should.be.false;
         });
 
+        it('should remove expired powerUps from each player', function () {
+            var player = new Player('test');
+
+            sinon.spy(player.getPowerUpManager(), 'purgeExpired');
+            player.setPosition(new Point(2, 2));
+            player.setDirection('west');
+
+            game.queuePlayer(player);
+            game.flushPlayerQueue();
+            player.getPowerUpManager().purgeExpired.called.should.be.false;
+
+            game.tick();
+            player.getPowerUpManager().purgeExpired.called.should.be.true;
+        });
+
         it('should kill players who collide with themselves', function () {
             var player1 = new Player('test1');
 
@@ -485,7 +594,7 @@ describe('Game', function () {
             game.queuePlayer(player1);
 
             // Flush player queue and move one space
-            game.tick();
+            game.flushPlayerQueue();
             game.tick();
 
             player1.setDirection('south');
@@ -569,18 +678,67 @@ describe('Game', function () {
             player2.isAlive().should.be.false;
         });
 
-        it('should feed living players who collide with food and remove food from the game', function () {
+        it('should feed living players who collide with food, remove food from the game and (maybe) spawn a powerUp', function () {
             var game = new Game({
                     foodMax: 2,
+                    playerSpeed: 1,
                     width: 5,
                     height: 5
                 }),
                 foodPlaced = 0,
-                player1 = new Player('test1', 4),
-                player2 = new Player('test2', 4);
+                player1 = new Player('test1', { length: 4 }),
+                player2 = new Player('test2', { length: 4 });
 
+            sinon.stub(game, 'spawnPowerUp');
             sinon.stub(game, 'getRandomSpawnLocation', function () {
                 return new Point(3, foodPlaced++);
+            });
+            sinon.stub(player2, 'isAlive').returns(false);
+
+            player1.setPosition(new Point(1, 0));
+            player1.setDirection('east');
+
+            player2.setPosition(new Point(1, 1));
+            player2.setDirection('east');
+
+            game.queuePlayer(player1);
+            game.queuePlayer(player2);
+
+            // Flush the player queue
+            game.flushPlayerQueue();
+
+            // Move the game along one tick
+            game.tick();
+
+            player1.getLength().should.eql(4);
+            player2.getLength().should.eql(4);
+            game.getFood().length.should.eql(2);
+            game.spawnPowerUp.called.should.be.false;
+
+            // Move the game along another tick so the players collides with food
+            game.tick();
+            player1.getLength().should.eql(5);
+            player2.getLength().should.eql(4);
+            game.getFood().length.should.eql(1);
+            game.spawnPowerUp.called.should.be.true;
+        });
+
+        it('should apply powerUps to living players who collide with them and remove the powerUps from the game', function () {
+            var game = new Game({
+                    powerUpMax: 2,
+                    powerUpChance: 1,
+                    playerSpeed: 1,
+                    foodMax: 2,
+                    width: 5,
+                    height: 5
+                }),
+                powerUpsPlaced = 0,
+                player1 = new Player('test1'),
+                player2 = new Player('test2');
+
+            sinon.stub(game, 'spawnFood');
+            sinon.stub(game, 'getRandomSpawnLocation', function () {
+                return new Point(3, powerUpsPlaced++);
             });
             sinon.stub(player2, 'isAlive').returns(false);
             player1.setPosition(new Point(1, 0));
@@ -588,19 +746,23 @@ describe('Game', function () {
             player2.setPosition(new Point(1, 1));
             player2.setDirection('east');
             game.queuePlayer(player1);
+            game.queuePlayer(player2);
+            game.spawnPowerUp();
+            game.spawnPowerUp();
 
             // Flush the player queue
-            game.tick();
+            game.flushPlayerQueue();
 
             // Move the game along one tick
             game.tick();
-            game.getFood().length.should.eql(2);
+            game.getPowerUps().length.should.eql(2);
 
             // Move the game along another tick so the players collides with food
             game.tick();
-            player1.getLength().should.eql(5);
-            player2.getLength().should.eql(4);
-            game.getFood().length.should.eql(1);
+
+            player1.getPowerUpManager().getPowerUps().length.should.eql(1);
+            player2.getPowerUpManager().getPowerUps().length.should.eql(0);
+            game.getPowerUps().length.should.eql(1);
         });
 
         it('should flush the player queue', function () {
@@ -613,7 +775,10 @@ describe('Game', function () {
             var game = new Game({
                     foodMax: 1,
                     width: 5,
-                    height: 5
+                    height: 5,
+                    playerSpeed: 1,
+                    powerUpMax: 1,
+                    powerUpChance: 1
                 }),
                 provider = [
                     {
@@ -663,7 +828,7 @@ describe('Game', function () {
                         expected: [
                             [null, null, null, null, null],
                             [null, null, null, null, null],
-                            [null, null, null, null, null],
+                            ['powerup:invincible', null, null, null, null],
                             [null, null, 'player:head#p2', null, null],
                             [null, null, 'player#p2', 'player#p2', 'player#p2']
                         ]
@@ -676,17 +841,26 @@ describe('Game', function () {
                         expected: [
                             [null, null, null, null, null],
                             [null, null, null, null, null],
-                            [null, null, 'player:head#p2', null, null],
-                            [null, null, 'player#p2', null, null],
+                            ['powerup:invincible', null, 'player:head#p2', null, null],
+                            ['food', null, 'player#p2', null, null],
                             [null, null, 'player#p2', 'player#p2', 'player#p2']
                         ]
                     }
                 ],
                 player1 = new Player('p1'),
                 player2 = new Player('p2'),
-                player3 = new Player('p3');
+                player3 = new Player('p3'),
+                randomPointsGiven = 0;
 
-            sinon.stub(game, 'getRandomSpawnLocation').returns(new Point(3, 2));
+            sinon.stub(game, 'getRandomSpawnLocation', function () {
+                var point = new Point(3, 2);
+                randomPointsGiven++;
+                if (randomPointsGiven > 1) {
+                    point = new Point(randomPointsGiven, 0);
+                }
+                return point;
+            });
+            sinon.stub(game, 'getRandomPowerUpConstructor').returns(InvinciblePowerUp);
             sinon.stub(player3, 'isAlive').returns(false);
             sinon.stub(player3, 'shouldRender').returns(false);
             player1.setPosition(new Point(1, 0));

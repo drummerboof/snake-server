@@ -29,6 +29,18 @@ describe('DisplayObject', function () {
         });
     });
 
+    describe('#getId()', function () {
+
+        it('should return the ID string for the type', function () {
+            var SubDisplayObject = DisplayObject.extend({
+                    _identifier: 'bob'
+                }),
+                subObject = new SubDisplayObject();
+
+            subObject.getCollisionPointId().should.eql('bob');
+        });
+    });
+
     describe('#getCollisionPointId()', function () {
 
         it('should return the ID string for the type', function () {
