@@ -19,7 +19,6 @@ Snake.App = (function () {
 
         initialize: function (options) {
             this.keyListener = new Snake.Models.KeyListener(this._keyMap);
-            this.keyListener.listen();
 
             this._initializeModels(options);
             this._initializeViews(options);
@@ -42,27 +41,38 @@ Snake.App = (function () {
             this.models.player = new Snake.Models.Player({
                 keyListener: this.keyListener
             });
+            this.models.player.on('change:alive', this._onPlayerDeadOrAlive, this);
+
             this.models.game = new Snake.Models.GameClient({
                 socket: options.io.connect(window.location.pathname),
                 player: this.models.player
             });
             this.models.game.on('connect:success', this.render, this);
             this.models.game.on('connect:error', this.error, this);
-            this.models.player.on('change:alive', this._onPlayerDeadOrAlive, this);
+            this.models.game.on('player:join:success', function () {
+                this.keyListener.listen();
+            }, this);
+            this.models.game.on('game:over', function () {
+                this.keyListener.stop();
+            }, this);
         },
 
         _initializeViews: function (options) {
             this.views.messages = new Snake.Views.Messages();
+
             this.views.scores = new Snake.Views.Scores({
                 model: this.models.player
             });
+
             this.views.controls = new Snake.Views.Controls({
                 model: this.models.game,
                 player: this.models.player
             });
+
             this.views.players = new Snake.Views.Players({
                 model: this.models.game.players
             });
+
             this.views.canvas = new Snake.Views.Canvas({
                 model: this.models.game
             });

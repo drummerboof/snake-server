@@ -39,13 +39,11 @@ Snake.Models.GameClient = (function () {
             this.players = new Snake.Collections.Players();
             this.player.on('change:direction', function (model) {
                 if (this.isRunning() && model.get('alive')) {
-                    this._emit('player:command', { direction: model.get('direction') });
+                    this.sendPlayerDirection(model.get('direction'));
                 }
             }, this);
             this.player.on('join', function () {
-                this._emit('player:join', {
-                    name: this.player.get('name')
-                });
+                this.join(this.player.get('name'));
             }, this);
             this.on('change:raw', this._onRawChange, this);
             this.on('player:join:error', this._onPlayerJoinError, this);
@@ -69,6 +67,14 @@ Snake.Models.GameClient = (function () {
             this._emit('game:reset');
         },
 
+        join: function (name) {
+            this._emit('player:join', { name: name });
+        },
+
+        sendPlayerDirection: function (direction) {
+            this._emit('player:command', { direction: direction });
+        },
+
         isRunning: function () {
             return this.get('status') === 'playing';
         },
@@ -86,7 +92,7 @@ Snake.Models.GameClient = (function () {
             if (this.player) {
                 var serverPlayer = this.players.get(this.player.get('name'));
                 if (serverPlayer) {
-                    this.player.set(_.pick(serverPlayer.toJSON(), ['score', 'length', 'alive']));
+                    this.player.set(_.pick(serverPlayer.toJSON(), ['score', 'length', 'alive', 'powerUps']));
                 }
             }
             this.set(_.pick(data, this._copyToTopLevel));

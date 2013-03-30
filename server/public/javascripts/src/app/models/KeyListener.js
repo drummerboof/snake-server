@@ -14,12 +14,14 @@ Snake.Models.KeyListener = (function () {
         },
 
         listen: function () {
-            console.log('listening');
+            this.stop();
             $(document).on('keydown', this._scopedKeyPress);
+            console.log('Listening for keys...');
         },
 
         stop: function () {
             $(document).off('keydown', this._scopedKeyPress);
+            console.log('Stopped listening for keys...');
         },
 
         _onKeyPress: function (event) {
