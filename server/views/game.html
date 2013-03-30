@@ -10,8 +10,13 @@
 
     </div>
     <div id="game" class="clearfix">
-        <div id="scores" class="panel">
+        <div id="top" class="panel clearfix">
+            <div id="scores">
 
+            </div>
+            <ul id="powerups">
+
+            </ul>
         </div>
         <div id="canvas">
 
@@ -39,6 +44,7 @@
 <script src="/javascripts/src/app/views/Canvas.js"></script>
 <script src="/javascripts/src/app/views/Controls.js"></script>
 <script src="/javascripts/src/app/views/Scores.js"></script>
+<script src="/javascripts/src/app/views/PowerUps.js"></script>
 <script src="/javascripts/src/app/views/Players.js"></script>
 <script src="/javascripts/src/app/views/Game.js"></script>
 
@@ -56,6 +62,16 @@
         <span class="key">Score:</span>
         <span class="value"><%= score %></span>
     </div>
+</script>
+
+<script id="template-powerup" type="text/x-template">
+    <li class="player-powerup <%= id %>">
+        <i class="player-powerup-icon"></i>
+        <span class="player-powerup-time">
+            <%= remaining %>
+            <span class="player-powerup-time-units">S</span>
+        </span>
+    </li>
 </script>
 
 <script id="template-controls" type="text/x-template">

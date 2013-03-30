@@ -59,11 +59,41 @@ a {
     border-right: 1px solid #CCCCCC;
 }
 
+#top {
+    height: 28px;
+}
+
 #scores {
+    float: left;
     font-size: 1.2em;
     line-height: 24px;
-    height: 24px;
     text-shadow: 0 1px 0 #FFFFFF;
+}
+
+#powerups {
+    float: right;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.player-powerup {
+    float: left;
+    margin-left: 4px;
+}
+
+.player-powerup-icon {
+    display: block;
+    width: 16px;
+    height: 16px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+}
+
+.player-powerup-time {
+    display: block;
+    text-align: center;
+    font-size: 8px;
 }
 
 #controls {
@@ -129,18 +159,19 @@ a {
     -webkit-animation: pulse 0.5s infinite;
 }
 
+.player-powerup.speed .player-powerup-icon,
 #canvas > .powerup.speed {
     background-color: #76e300;
 }
-
+.player-powerup.points .player-powerup-icon,
 #canvas > .powerup.points {
     background-color: #42c9f8;
 }
-
+.player-powerup.length .player-powerup-icon,
 #canvas > .powerup.length {
     background-color: #6e00f5;
 }
-
+.player-powerup.invincible .player-powerup-icon,
 #canvas > .powerup.invincible {
     background-color: #f9006d;
 }

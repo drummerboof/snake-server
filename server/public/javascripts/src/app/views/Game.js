@@ -23,6 +23,10 @@ Snake.Views.Game = (function () {
                 model: this.models.player
             });
 
+            this.views.powerUps = new Snake.Views.PowerUps({
+                model: this.models.player.powerUps
+            });
+
             this.views.controls = new Snake.Views.Controls({
                 model: this.models.game,
                 player: this.models.player

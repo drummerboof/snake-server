@@ -11,11 +11,14 @@ Snake.Models.Player = (function () {
 
         initialize: function () {
             this.powerUps = new Backbone.Collection();
-            this.on('change:powerUps', this._onPowerUpsChange, this);
+            this.on('change', this._onPowerUpsChange, this);
         },
 
         _onPowerUpsChange: function (model, data) {
-            this.powerUps.reset(data);
+            _.each(this.get('powerUps'), function (powerUp) {
+                console.log(powerUp.applied);
+            });
+            this.powerUps.reset(this.get('powerUps'));
         }
     });
 

@@ -85,15 +85,14 @@ Snake.Models.GameClient = (function () {
         },
 
         _onRawChange: function (model, data) {
+            var serverPlayer;
             this.players.reset(_.map(data.players, function (player) {
                 player.id = player.name;
                 return player;
             }, this));
-            if (this.player) {
-                var serverPlayer = this.players.get(this.player.get('name'));
-                if (serverPlayer) {
-                    this.player.set(_.pick(serverPlayer.toJSON(), ['score', 'length', 'alive', 'powerUps']));
-                }
+            serverPlayer = this.players.get(this.player.get('name'));
+            if (serverPlayer) {
+                this.player.set(_.pick(serverPlayer.toJSON(), ['score', 'length', 'alive', 'powerUps', 'position']));
             }
             this.set(_.pick(data, this._copyToTopLevel));
         },
