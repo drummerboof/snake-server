@@ -10,16 +10,18 @@ Snake.Views.PowerUps = (function () {
 
         initialize: function (options) {
             this.template = _.template($('#template-powerup').html());
-            this.model.on('reset', this.render, this);
+            this.model.on('change', this.render, this);
         },
 
         render: function () {
-            this.$el.empty();
-            this.model.each(function (powerUp) {
-                var data = powerUp.toJSON();
-                data.remaining = Math.ceil((data.duration + (data.applied - Date.now())) / 1000);
-                this.$el.append(this.template(data));
-            }, this);
+            if (_.isArray(this.model.get('powerUps'))) {
+                this.$el.empty();
+                _.each(this.model.get('powerUps'), function (powerUp) {
+                    this.$el.append(this.template(_.extend({}, powerUp, {
+                        remaining: Math.ceil((powerUp.duration + (powerUp.applied - Date.now())) / 1000)
+                    })));
+                }, this);
+            }
             return this;
         }
     });

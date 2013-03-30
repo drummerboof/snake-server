@@ -24,7 +24,7 @@ Snake.Views.Game = (function () {
             });
 
             this.views.powerUps = new Snake.Views.PowerUps({
-                model: this.models.player.powerUps
+                model: this.models.player
             });
 
             this.views.controls = new Snake.Views.Controls({
@@ -51,6 +51,9 @@ Snake.Views.Game = (function () {
             });
             this.models.game.on('connect:success', this.render, this);
             this.models.game.on('connect:error', this.error, this);
+            this.models.game.on('game:start:success', function () {
+                Snake.App.trigger('messages:clear');
+            }, this);
             this.models.game.on('player:join:success', function () {
                 this.keyListener.listen();
             }, this);
