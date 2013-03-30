@@ -154,6 +154,7 @@ describe('PowerUp Manager', function () {
             clock.tick(2000);
             manager.purgeExpired();
             manager.has('test').should.be.true;
+            powerUp.getApplied().should.eql(0);
 
             manager.pause();
             clock.tick(3000);
@@ -161,9 +162,12 @@ describe('PowerUp Manager', function () {
             manager.has('test').should.be.true;
 
             manager.resume();
+            powerUp.getApplied().should.eql(3000);
+            
             clock.tick(3000);
             manager.purgeExpired();
             manager.has('test').should.be.false;
+
 
             clock.restore();
         });
