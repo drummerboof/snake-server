@@ -11,7 +11,7 @@ describe('DisplayObject', function () {
 
     describe('#serialize()', function () {
 
-        it('should include the point and identifier in the state information', function () {
+        it('should include the point, collision points and identifier in the state information', function () {
             var SubDisplayObject = DisplayObject.extend({
                     _identifier: 'test',
                     _state: {

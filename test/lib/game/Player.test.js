@@ -67,6 +67,7 @@ describe('Player', function () {
                 position: null,
                 score: 0,
                 powerUps: [],
+                points: [],
                 body: [{
                     x: 0,
                     y: 0
@@ -97,7 +98,12 @@ describe('Player', function () {
                 powerUps: [{
                     id: 'test',
                     position: null,
+                    points: [],
                     duration: 0
+                }],
+                points: [{
+                    x: 0,
+                    y: 0
                 }],
                 body: [{
                     x: 0,
@@ -276,6 +282,7 @@ describe('Player', function () {
                 new Point(4, 3),
                 new Point(4, 4)
             ];
+            sinon.stub(player, 'getPosition').returns(body[0]);
             sinon.stub(player, 'getBodyRelativeToPosition').returns(body);
             player.getCollisionPoints().should.equal(body);
         });
@@ -290,6 +297,7 @@ describe('Player', function () {
                     new Point(4, 3),
                     new Point(4, 4)
                 ];
+            sinon.stub(player, 'getPosition').returns(body[0]);
             sinon.stub(player, 'getBodyRelativeToPosition').returns(body);
 
             player.consume(powerUp);
@@ -304,8 +312,12 @@ describe('Player', function () {
                     return false;
                 }),
                 collidingPlayer = new Player('colliding');
+
+            sinon.stub(player, 'getPosition').returns(new Point(1, 1));
             sinon.stub(player, 'getBodyRelativeToPosition').returns([new Point(1, 1)]);
+            sinon.stub(collidingPlayer, 'getPosition').returns(new Point(1, 1));
             sinon.stub(collidingPlayer, 'getBodyRelativeToPosition').returns([new Point(1, 1)]);
+
             player.consume(powerUp);
             player.collides(collidingPlayer).should.be.false;
             collidingPlayer.collides(player).should.eql(new Point(1, 1));

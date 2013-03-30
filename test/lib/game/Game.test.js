@@ -61,6 +61,10 @@ describe('Game', function () {
                     alive: true,
                     score: 0,
                     powerUps: [],
+                    points: [{
+                        x: 0,
+                        y: 0
+                    }],
                     body: [{
                         x: 0,
                         y: 0

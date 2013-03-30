@@ -28,6 +28,10 @@ describe('AbstractPowerUp', function () {
                     x: 0,
                     y: 0
                 },
+                points: [{
+                    x: 0,
+                    y: 0
+                }],
                 duration: 5000
             });
         });
