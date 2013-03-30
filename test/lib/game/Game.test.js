@@ -436,6 +436,15 @@ describe('Game', function () {
             startSpy.callCount.should.eql(1);
         });
 
+        it('should resume all player powerUp mangers', function () {
+            var player = new Player('test');
+            sinon.spy(player.getPowerUpManager(), 'resume');
+            game.queuePlayer(player);
+            game.flushPlayerQueue();
+            game.start();
+            player.getPowerUpManager().resume.calledOnce.should.be.true;
+        });
+
         it('should do nothing if the game is already running', function () {
             sinon.stub(game, 'tick');
             game.start();
@@ -463,6 +472,16 @@ describe('Game', function () {
             game.start();
             game.pause();
             pauseSpy.callCount.should.eql(1);
+        });
+
+        it('should pause all player powerUp mangers', function () {
+            var player = new Player('test');
+            sinon.spy(player.getPowerUpManager(), 'pause');
+            game.queuePlayer(player);
+            game.flushPlayerQueue();
+            game.start();
+            game.pause();
+            player.getPowerUpManager().pause.calledOnce.should.be.true;
         });
 
         it('should do nothing if the game is already running', function () {

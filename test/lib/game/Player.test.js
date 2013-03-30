@@ -79,6 +79,7 @@ describe('Player', function () {
     describe('#serialize()', function () {
 
         it('should return the correct value', function () {
+            var clock = sinon.useFakeTimers();
             player.setDirection('east');
             player.setPosition(new Point(0, 0));
             player.consume(new PowerUp());
@@ -99,7 +100,8 @@ describe('Player', function () {
                     id: 'test',
                     position: null,
                     points: [],
-                    duration: 0
+                    duration: 0,
+                    applied: 0
                 }],
                 points: [{
                     x: 0,
@@ -110,6 +112,7 @@ describe('Player', function () {
                     y: 0
                 }]
             });
+            clock.restore();
         });
     });
 
