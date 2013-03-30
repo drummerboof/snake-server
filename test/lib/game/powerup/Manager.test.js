@@ -148,13 +148,13 @@ describe('PowerUp Manager', function () {
             var powerUp = new ConcretePowerUp(),
                 player = new Player('test'),
                 manager = new PowerUpManager(player),
-                clock = sinon.useFakeTimers();
+                clock = sinon.useFakeTimers(1000);
 
             manager.add(powerUp);
             clock.tick(2000);
             manager.purgeExpired();
             manager.has('test').should.be.true;
-            powerUp.getApplied().should.eql(0);
+            powerUp.getApplied().should.eql(1000);
 
             manager.pause();
             clock.tick(3000);
@@ -162,12 +162,11 @@ describe('PowerUp Manager', function () {
             manager.has('test').should.be.true;
 
             manager.resume();
-            powerUp.getApplied().should.eql(3000);
+            powerUp.getApplied().should.eql(4000);
             
             clock.tick(3000);
             manager.purgeExpired();
             manager.has('test').should.be.false;
-
 
             clock.restore();
         });
