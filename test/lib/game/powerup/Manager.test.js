@@ -28,35 +28,60 @@ describe('PowerUp Manager', function () {
 
     describe('#add()', function () {
 
-        it('should add the PowerUp to the manager and call the PowerUp applyTo() method', function () {
+        it('should add the PowerUp to the manager and call the PowerUp apply() method', function () {
             var powerUp = new ConcretePowerUp(),
                 player = new Player('test'),
                 manager = new PowerUpManager(player),
                 clock = sinon.useFakeTimers(1364416465537);
 
-            sinon.stub(powerUp, 'applyTo');
+            sinon.stub(powerUp, 'apply');
             manager.add(powerUp);
 
-            powerUp.applyTo.calledWithExactly(player).should.be.true;
+            powerUp.apply.calledWithExactly(player).should.be.true;
             manager.getPowerUps().length.should.eql(1);
             manager.getPowerUps()[0].should.eql(powerUp);
+
+            clock.restore();
         });
 
         it('should not allow two or more of the same powerUp if they are not stackable', function () {
 
-            var stackablePowerUp = new ConcretePowerUpLong(),
-                unStackablePowerUp = new ConcretePowerUp(),
+            var stackablePowerUp = new ConcretePowerUp(),
+                unStackablePowerUp = new ConcretePowerUpLong(),
                 player = new Player('test'),
                 manager = new PowerUpManager(player),
                 provider = [{
                     powerUp: stackablePowerUp,
                     expectedLength: 1
+                }, {
+                    powerUp: stackablePowerUp,
+                    expectedLength: 2
+                }, {
+                    powerUp: unStackablePowerUp,
+                    expectedLength: 3
+                }, {
+                    powerUp: unStackablePowerUp,
+                    expectedLength: 3
                 }];
 
             _.each(provider, function (data) {
                 manager.add(data.powerUp);
                 manager.getPowerUps().length.should.eql(data.expectedLength);
             }, this);
+        });
+
+        it('should update the applied time of a second powerUp if it is not stackable', function () {
+
+            var powerUp = new ConcretePowerUpLong(),
+                player = new Player('test'),
+                manager = new PowerUpManager(player),
+                clock = sinon.useFakeTimers();
+
+            manager.add(powerUp);
+            clock.tick(5000);
+            powerUp.getApplied().should.eql(0);
+            manager.add(powerUp);
+            powerUp.getApplied().should.eql(5000);
         });
     });
 
@@ -71,7 +96,6 @@ describe('PowerUp Manager', function () {
                 result;
 
             ConcretePowerUp.prototype.testHook = function (player, value) {
-                console.log(value);
                 return value * 2;
             };
 
@@ -118,16 +142,43 @@ describe('PowerUp Manager', function () {
         });
     });
 
+    describe('#pause() #resume()', function () {
+
+        it('should pause and resume the countdown of each powerUp', function () {
+            var powerUp = new ConcretePowerUp(),
+                player = new Player('test'),
+                manager = new PowerUpManager(player),
+                clock = sinon.useFakeTimers();
+
+            manager.add(powerUp);
+            clock.tick(2000);
+            manager.purgeExpired();
+            manager.has('test').should.be.true;
+
+            manager.pause();
+            clock.tick(3000);
+            manager.purgeExpired();
+            manager.has('test').should.be.true;
+
+            manager.resume();
+            clock.tick(3000);
+            manager.purgeExpired();
+            manager.has('test').should.be.false;
+
+            clock.restore();
+        });
+    });
+
     describe('#clear()', function () {
 
-        it('should call removeFrom() for each PowerUp and clear the manager', function () {
+        it('should call remove() for each PowerUp and clear the manager', function () {
             var powerUp1 = new ConcretePowerUp(),
                 powerUp2 = new ConcretePowerUp(),
                 player = new Player('test'),
                 manager = new PowerUpManager(player);
 
-            sinon.spy(powerUp1, 'removeFrom');
-            sinon.spy(powerUp2, 'removeFrom');
+            sinon.spy(powerUp1, 'remove');
+            sinon.spy(powerUp2, 'remove');
 
             manager.hook('testHook');
             manager.add(powerUp1);
@@ -136,8 +187,8 @@ describe('PowerUp Manager', function () {
             manager.getRegisteredHooks().length.should.eql(1);
 
             manager.clear();
-            powerUp1.removeFrom.calledWithExactly(player).should.be.true;
-            powerUp2.removeFrom.calledWithExactly(player).should.be.true;
+            powerUp1.remove.calledWithExactly(player).should.be.true;
+            powerUp2.remove.calledWithExactly(player).should.be.true;
             manager.getPowerUps().length.should.eql(0);
             manager.getRegisteredHooks().length.should.eql(0);
         });
@@ -152,8 +203,8 @@ describe('PowerUp Manager', function () {
                 manager = new PowerUpManager(player),
                 clock = sinon.useFakeTimers();
 
-            sinon.spy(powerUp1, 'removeFrom');
-            sinon.spy(powerUp2, 'removeFrom');
+            sinon.spy(powerUp1, 'remove');
+            sinon.spy(powerUp2, 'remove');
 
             manager.add(powerUp1);
             manager.add(powerUp2);
@@ -161,11 +212,12 @@ describe('PowerUp Manager', function () {
             clock.tick(5000);
             manager.purgeExpired();
 
-            powerUp2.removeFrom.called.should.be.false;
-            powerUp1.removeFrom.calledWithExactly(player).should.be.true;
+            powerUp2.remove.called.should.be.false;
+            powerUp1.remove.calledWithExactly(player).should.be.true;
             manager.getPowerUps().length.should.eql(1);
             manager.getPowerUps()[0].should.eql(powerUp2);
 
+            clock.restore();
         });
     });
 });

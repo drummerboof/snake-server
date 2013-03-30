@@ -3,6 +3,7 @@ describe('AbstractPowerUp', function () {
     var _ = require('lodash'),
         sinon = require('sinon'),
         Point = require('../../../../lib/game/Point'),
+        Player = require('../../../../lib/game/Player'),
         AbstractPowerUp = require('../../../../lib/game/powerup/AbstractPowerUp');
 
     var ConcretePowerUp = AbstractPowerUp.extend({
@@ -24,6 +25,7 @@ describe('AbstractPowerUp', function () {
             powerUp.setPosition(new Point(0, 0));
             powerUp.serialize().should.eql({
                 id: 'test',
+                applied: 0,
                 position: {
                     x: 0,
                     y: 0
@@ -34,6 +36,40 @@ describe('AbstractPowerUp', function () {
                 }],
                 duration: 5000
             });
+        });
+    });
+
+    describe('#apply()', function () {
+
+        it('should set the time applied and call #applyTo()', function () {
+            var powerUp = new ConcretePowerUp(),
+                player = new Player('test'),
+                clock = sinon.useFakeTimers(1234);
+
+            sinon.stub(powerUp, 'setApplied');
+            sinon.stub(powerUp, 'applyTo');
+
+            powerUp.apply(player);
+            powerUp.setApplied.calledWithExactly(1234).should.be.true;
+            powerUp.applyTo.calledWithExactly(player).should.be.true;
+
+            clock.restore();
+        });
+    });
+
+    describe('#remove()', function () {
+
+        it('should clear the time applied and call #removeFrom()', function () {
+            var powerUp = new ConcretePowerUp(),
+                player = new Player('test');
+
+            sinon.stub(powerUp, 'setApplied');
+            sinon.stub(powerUp, 'removeFrom');
+
+            powerUp.apply(player);
+            powerUp.remove(player);
+            powerUp.setApplied.calledWithExactly(0).should.be.true;
+            powerUp.removeFrom.calledWithExactly(player).should.be.true;
         });
     });
 
