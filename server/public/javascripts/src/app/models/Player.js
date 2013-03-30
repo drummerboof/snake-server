@@ -9,19 +9,13 @@ Snake.Models.Player = (function () {
 
         directions: ['north', 'south', 'east', 'west'],
 
-        initialize: function (options) {
-            this.keyListener = options.keyListener;
-            this._initializeKeyListener();
+        initialize: function () {
+            this.powerUps = new Backbone.Collection();
+            this.on('change:powerUps', this._onPowerUpsChange, this);
         },
 
-        _initializeKeyListener: function () {
-            _.each(this.directions, function (direction) {
-                this.keyListener.on('press:' + direction, this._onKeyPress, this);
-            }, this);
-        },
-
-        _onKeyPress: function (alias) {
-            this.set({ direction: alias });
+        _onPowerUpsChange: function (model, data) {
+            this.powerUps.reset(data);
         }
     });
 
