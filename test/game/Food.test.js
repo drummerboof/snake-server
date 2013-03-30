@@ -1,8 +1,8 @@
 describe('Food', function () {
 
     var _ = require('lodash'),
-        Food = require('../../../lib/game/Food'),
-        Point = require('../../../lib/game/Point');
+        Food = require('../../src/game/Food'),
+        Point = require('../../src/game/Point');
 
     describe('#Food()', function () {
 

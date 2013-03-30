@@ -1,7 +1,7 @@
 describe('Point', function () {
 
     var _ = require('lodash'),
-        Point = require('../../../lib/game/Point');
+        Point = require('../../src/game/Point');
 
     describe('#Point()', function () {
 

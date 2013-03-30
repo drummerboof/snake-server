@@ -2,8 +2,8 @@ describe('DisplayObject', function () {
 
     var _ = require('lodash'),
         sinon = require('sinon'),
-        DisplayObject = require('../../../lib/game/DisplayObject'),
-        Point = require('../../../lib/game/Point');
+        DisplayObject = require('../../src/game/DisplayObject'),
+        Point = require('../../src/game/Point');
 
     describe('#DisplayObject()', function () {
 

@@ -2,9 +2,9 @@ describe('AbstractPowerUp', function () {
 
     var _ = require('lodash'),
         sinon = require('sinon'),
-        Point = require('../../../../lib/game/Point'),
-        Player = require('../../../../lib/game/Player'),
-        AbstractPowerUp = require('../../../../lib/game/powerup/AbstractPowerUp');
+        Point = require('../../../src/game/Point'),
+        Player = require('../../../src/game/Player'),
+        AbstractPowerUp = require('../../../src/game/powerup/AbstractPowerUp');
 
     var ConcretePowerUp = AbstractPowerUp.extend({
         _identifier: 'test',

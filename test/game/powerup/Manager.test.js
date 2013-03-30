@@ -2,9 +2,9 @@ describe('PowerUp Manager', function () {
 
     var _ = require('lodash'),
         sinon = require('sinon'),
-        Player = require('../../../../lib/game/Player'),
-        PowerUpManager = require('../../../../lib/game/powerup/Manager'),
-        AbstractPowerUp = require('../../../../lib/game/powerup/AbstractPowerUp');
+        Player = require('../../../src/game/Player'),
+        PowerUpManager = require('../../../src/game/powerup/Manager'),
+        AbstractPowerUp = require('../../../src/game/powerup/AbstractPowerUp');
 
     var ConcretePowerUp = AbstractPowerUp.extend({
         _identifier: 'test',

@@ -2,12 +2,12 @@ describe('Game', function () {
 
     var _ = require('lodash'),
         sinon = require('sinon'),
-        Game = require('../../../lib/game/Game'),
-        Player = require('../../../lib/game/Player'),
-        Food = require('../../../lib/game/Food'),
-        Point = require('../../../lib/game/Point'),
-        InvinciblePowerUp = require('../../../lib/game/powerup/Invincible'),
-        FoodPointMultiplierPowerUp = require('../../../lib/game/powerup/FoodPointMultiplier'),
+        Game = require('../../src/game/Game'),
+        Player = require('../../src/game/Player'),
+        Food = require('../../src/game/Food'),
+        Point = require('../../src/game/Point'),
+        InvinciblePowerUp = require('../../src/game/powerup/Invincible'),
+        FoodPointMultiplierPowerUp = require('../../src/game/powerup/FoodPointMultiplier'),
         game;
 
     beforeEach(function () {

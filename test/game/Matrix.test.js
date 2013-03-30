@@ -1,8 +1,8 @@
 describe('Matrix', function () {
 
     var _ = require('lodash'),
-        Matrix = require('../../../lib/game/Matrix'),
-        Point = require('../../../lib/game/Point');
+        Matrix = require('../../src/game/Matrix'),
+        Point = require('../../src/game/Point');
 
     describe('#Matrix()', function () {
 

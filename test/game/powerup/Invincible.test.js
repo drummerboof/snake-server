@@ -2,9 +2,9 @@ describe('InvinciblePowerUp', function () {
 
     var _ = require('lodash'),
         sinon = require('sinon'),
-        Food = require('../../../../lib/game/Food'),
-        Player = require('../../../../lib/game/Player'),
-        InvinciblePowerUp = require('../../../../lib/game/powerup/Invincible');
+        Food = require('../../../src/game/Food'),
+        Player = require('../../../src/game/Player'),
+        InvinciblePowerUp = require('../../../src/game/powerup/Invincible');
 
     describe('#getId()', function () {
         it('should return the correct identifier', function () {

@@ -2,8 +2,8 @@ describe('SpeedMultiplierPowerUp', function () {
 
     var _ = require('lodash'),
         sinon = require('sinon'),
-        Player = require('../../../../lib/game/Player'),
-        SpeedMultiplierPowerUp = require('../../../../lib/game/powerup/SpeedMultiplier');
+        Player = require('../../../src/game/Player'),
+        SpeedMultiplierPowerUp = require('../../../src/game/powerup/SpeedMultiplier');
 
     describe('#getId()', function () {
         it('should return the correct identifier', function () {

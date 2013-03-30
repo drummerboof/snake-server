@@ -2,11 +2,11 @@ describe('Player', function () {
 
     var _ = require('lodash'),
         sinon = require('sinon'),
-        Player = require('../../../lib/game/Player'),
-        Point = require('../../../lib/game/Point'),
-        Food = require('../../../lib/game/Food'),
-        AbstractPowerUp = require('../../../lib/game/powerup/AbstractPowerUp'),
-        PowerUpManager = require('../../../lib/game/powerup/Manager'),
+        Player = require('../../src/game/Player'),
+        Point = require('../../src/game/Point'),
+        Food = require('../../src/game/Food'),
+        AbstractPowerUp = require('../../src/game/powerup/AbstractPowerUp'),
+        PowerUpManager = require('../../src/game/powerup/Manager'),
         player;
 
     var PowerUp = AbstractPowerUp.extend({

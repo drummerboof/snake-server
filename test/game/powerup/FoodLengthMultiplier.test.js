@@ -2,7 +2,7 @@ describe('FoodLengthMultiplierPowerUp', function () {
 
     var _ = require('lodash'),
         sinon = require('sinon'),
-        FoodLengthMultiplierPowerUp = require('../../../../lib/game/powerup/FoodLengthMultiplier');
+        FoodLengthMultiplierPowerUp = require('../../../src/game/powerup/FoodLengthMultiplier');
 
     describe('#getId()', function () {
         it('should return the correct identifier', function () {

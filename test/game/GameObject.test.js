@@ -1,7 +1,7 @@
 describe('GameObject', function () {
 
     var sinon = require('sinon'),
-        GameObject = require('../../../lib/game/GameObject'),
+        GameObject = require('../../src/game/GameObject'),
         GameObjectSubClass1,
         GameObjectSubClass3,
         GameObjectSubClass2;
