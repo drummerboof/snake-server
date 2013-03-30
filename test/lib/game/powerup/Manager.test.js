@@ -188,12 +188,14 @@ describe('PowerUp Manager', function () {
             manager.add(powerUp2);
             manager.getPowerUps().length.should.eql(2);
             manager.getRegisteredHooks().length.should.eql(1);
+            manager.pause();
 
             manager.clear();
             powerUp1.remove.calledWithExactly(player).should.be.true;
             powerUp2.remove.calledWithExactly(player).should.be.true;
             manager.getPowerUps().length.should.eql(0);
             manager.getRegisteredHooks().length.should.eql(0);
+            manager._lastPaused.should.be.false;
         });
     });
 
