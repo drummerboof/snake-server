@@ -24,8 +24,28 @@ describe('DisplayObject', function () {
             displayObject.serialize().should.eql({
                 key: 'value',
                 id: 'test',
-                position: { x: 4, y: 5 }
+                position: { x: 4, y: 5 },
+                points: [{ x: 4, y: 5 }]
             });
+        });
+    });
+
+    describe('#reset()', function () {
+
+        it('should set the position back to null', function () {
+            var SubDisplayObject = DisplayObject.extend({
+                    _identifier: 'test',
+                    _state: {
+                        key: 'value'
+                    }
+                }),
+                displayObject = new SubDisplayObject();
+
+            displayObject.setPosition(4, 5);
+            displayObject.getPosition().should.eql(new Point(4, 5));
+
+            displayObject.reset();
+            (displayObject.getPosition() === null).should.be.true;
         });
     });
 
