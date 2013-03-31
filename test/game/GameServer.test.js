@@ -108,7 +108,6 @@ describe('Game Server', function () {
                 });
                 player.client.on('game:tick', function (data) {
                     data.game.players.length.should.eql(2);
-                    data.game.matrix.length.should.eql(10);
                     players[name].ticked = true;
                     if (players[player.other].ticked) {
                         done();

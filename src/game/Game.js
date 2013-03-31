@@ -44,9 +44,10 @@ module.exports = (function Game() {
             players: [],
             obstacles: [],
             powerUps: [],
-            food: [],
-            matrix: null
+            food: []
         },
+
+        _matrix: null,
 
         _timer: null,
 
@@ -77,7 +78,7 @@ module.exports = (function Game() {
             this._state.obstacles = [];
             this._state.powerUps = [];
             this._playerDirectionQueue = {};
-            this._state.matrix = new Matrix(this._settings.width, this._settings.height);
+            this._matrix = new Matrix(this._settings.width, this._settings.height);
         },
 
         start: function () {
@@ -104,7 +105,7 @@ module.exports = (function Game() {
         },
 
         getMatrix: function () {
-            return this._state.matrix;
+            return this._matrix;
         },
 
         isRunning: function () {
@@ -155,7 +156,7 @@ module.exports = (function Game() {
             }
             player.reset();
             player.setPosition(this.getRandomSpawnLocation());
-            quadrant = this._state.matrix.getPointQuadrant(player.getPosition());
+            quadrant = this._matrix.getPointQuadrant(player.getPosition());
             player.setDirection(statics.QUADRANT_DIRECTIONS[quadrant]);
         },
 
@@ -165,7 +166,7 @@ module.exports = (function Game() {
                     newPlayer.setPosition(this.getRandomSpawnLocation());
                 }
                 if (newPlayer.getDirection() === null) {
-                    var quadrant = this._state.matrix.getPointQuadrant(newPlayer.getPosition());
+                    var quadrant = this._matrix.getPointQuadrant(newPlayer.getPosition());
                     newPlayer.setDirection(statics.QUADRANT_DIRECTIONS[quadrant]);
                 }
                 this._state.players.push(newPlayer);
@@ -208,8 +209,8 @@ module.exports = (function Game() {
         },
 
         getRandomSpawnLocation: function () {
-            return this._state.matrix.getNextEmptyCellFromPoint(
-                Point.random(this._state.matrix.width() - 1, this._state.matrix.height() - 1)
+            return this._matrix.getNextEmptyCellFromPoint(
+                Point.random(this._matrix.width() - 1, this._matrix.height() - 1)
             );
         },
 
@@ -267,7 +268,7 @@ module.exports = (function Game() {
                 player.getPowerUpManager().purgeExpired();
 
                 // Self collisions or out of bounds of game
-                if (player.selfCollides() ||!this._state.matrix.isInBounds(player.getPosition())) {
+                if (player.selfCollides() ||!this._matrix.isInBounds(player.getPosition())) {
                     player.kill();
                     return;
                 }
@@ -338,11 +339,11 @@ module.exports = (function Game() {
 
         _updateMatrix: function () {
             var displayObjects = _.union(this._state.players, this._state.food, this._state.powerUps);
-            this._state.matrix.initialize(this._settings.width, this._settings.height);
+            this._matrix.initialize(this._settings.width, this._settings.height);
             _.each(displayObjects, function (object) {
                 if (object.shouldRender()) {
                     _.each(object.getCollisionPoints(), function (point, index) {
-                        this._state.matrix.set(point.getX(), point.getY(), object.getCollisionPointId(index));
+                        this._matrix.set(point.getX(), point.getY(), object.getCollisionPointId(index));
                     }, this);
                 }
             }, this);

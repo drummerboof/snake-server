@@ -73,11 +73,6 @@ describe('Game', function () {
                 obstacles: [],
                 powerUps: [],
                 food: [],
-                matrix: [
-                    [null, null, null],
-                    [null, null, null],
-                    [null, null, null]
-                ],
                 speed: 50,
                 foodMax: 1,
                 powerUpMax: 2,
@@ -121,12 +116,12 @@ describe('Game', function () {
             var randomPoint = new Point(2, 2),
                 nextFreePoint = new Point(3, 3);
             sinon.stub(Point, 'random').returns(randomPoint);
-            sinon.stub(game._state.matrix, 'getNextEmptyCellFromPoint').returns(nextFreePoint);
+            sinon.stub(game.getMatrix(), 'getNextEmptyCellFromPoint').returns(nextFreePoint);
 
             var point = game.getRandomSpawnLocation();
 
             Point.random.callCount.should.eql(1);
-            game._state.matrix.getNextEmptyCellFromPoint.calledWithExactly(randomPoint).should.be.true;
+            game.getMatrix().getNextEmptyCellFromPoint.calledWithExactly(randomPoint).should.be.true;
             point.should.equal(nextFreePoint);
         });
     });
@@ -547,9 +542,9 @@ describe('Game', function () {
             sinon.stub(game, 'getRandomSpawnLocation').returns(new Point(1, 2));
             game.spawnFood();
             game.tick();
-            game.serialize().matrix[1][2].should.eql('food');
+            game.getMatrix().get(1, 2).should.eql('food');
             game.reset();
-            (game.serialize().matrix[1][2] === null).should.be.true;
+            (game.getMatrix().get(1, 2) === null).should.be.true;
         });
     });
 
@@ -897,7 +892,7 @@ describe('Game', function () {
                 player1.setDirection(data.fixture.player1direction);
                 player2.setDirection(data.fixture.player2direction);
                 game.tick();
-                game.serialize().matrix.should.eql(data.expected);
+                game.getMatrix().serialize().should.eql(data.expected);
             }, this);
         })
 
