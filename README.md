@@ -1,1 +1,5 @@
-Multiplayer snake game with support for custom written AI bots
+# NodeSnake
+
+Multiplayer node.js snake server using websockets.
+
+TODO: Write more...
