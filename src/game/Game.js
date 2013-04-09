@@ -315,10 +315,13 @@ module.exports = (function Game() {
             this.flushPlayerQueue();
             this._updateMatrix();
 
-            this.trigger('tick', this);
-
             if (this.getLivingPlayers().length === 0) {
                 this._state.status = statics.STATUS_OVER;
+            }
+
+            this.trigger('tick', this);
+
+            if (this._state.status === statics.STATUS_OVER) {
                 this.trigger('gameover', this);
             }
 
