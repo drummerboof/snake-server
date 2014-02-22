@@ -6,10 +6,11 @@ module.exports = (function GameObject() {
 
     var GameObject = function () {
         this._state = _.clone(this._state, true);
-        this.initialize.apply(this, arguments);
+        this._defaultProperties = [];
         if (this._defaultProperties.length > 0) {
             this._defaults = _.clone(_.pick(this._state, this._defaultProperties));
         }
+        this.initialize.apply(this, arguments);
     };
 
     _.extend(GameObject.prototype, {
@@ -18,7 +19,7 @@ module.exports = (function GameObject() {
          * An array of default attributes which if populated ina subclass will result in
          * those attributes being copied into a _defaults property after initialize
          */
-        _defaultProperties: [],
+        _defaultProperties: null,
 
         /**
          * The defaults used if _defaultProperties is used
