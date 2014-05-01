@@ -31,7 +31,8 @@ module.exports = (function Player() {
             'length',
             'speed',
             'alive',
-            'score'
+            'score',
+            'body'
         ],
 
         _state: {

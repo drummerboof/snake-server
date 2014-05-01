@@ -6,7 +6,7 @@ module.exports = (function GameObject() {
 
     var GameObject = function () {
         this._state = _.clone(this._state, true);
-        this._defaultProperties = [];
+        this._defaultProperties = this._defaultProperties || [];
         if (this._defaultProperties.length > 0) {
             this._defaults = _.clone(_.pick(this._state, this._defaultProperties));
         }
